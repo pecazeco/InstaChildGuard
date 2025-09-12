@@ -1,1 +1,3 @@
 ignore/
+.vscode/
+code/node_modules/
