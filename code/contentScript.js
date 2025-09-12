@@ -1,4 +1,5 @@
 {
+
   let location = '' // guarda onde estamos no instagram (feed, stories, reels, ...)
 
   const checkInitialPosts = (location) => { // check the initial posts (before the page has been mutated) on the page (calls the necessary funcions for this)
@@ -49,21 +50,40 @@
   }
 
   const checkElement = (img, location) => { // check element and calls the front end funcions and the checkIfAdultization
+    // Verifica se a imagem já foi ou está sendo analisada. Se sim, para a execução.
+    if (img.dataset.analysisState) {
+      return;
+    }
+    
+    // Marca a imagem como "analisando" para evitar que seja processada novamente.
+    img.dataset.analysisState = 'pending';
+
     switch (location) {
       case '':  // feed
         const imageUrl = img.currentSrc // url da imagem atual
         showAnalysing(img, location);
 
-        setTimeout(() => {
+        setTimeout(async () => {
+          const response = await checkIfAdultization(imageUrl); // checa se contem conteudo de sexualizacao
+          // const response = 1;
+          // Marca a imagem como "concluída"
+          img.dataset.analysisState = 'complete';
 
-          removeAnalysing(img, location);
-
-          if (checkIfAdultization(imageUrl)) { // checa se contem conteudo de sexualizacao
-            // Censor
-            showCensored(img, location);
-          } else {
-            // Not censored -> show that it was checked 
-            showChecked(img, location);
+          removeAnalysing(img, location); 
+          switch (response) { 
+            case 0:
+              // Not censored -> show that it was checked 
+              showChecked(img, location);
+              break;
+            case 1:
+              // Censor
+              showCensored(img, location);
+              break;
+            case 2:
+              // error
+              showError(img, location);
+            default:
+              break;
           }
         }, 2000);
         break;
@@ -136,13 +156,32 @@
     // Adiciona tudo à página
     parent.appendChild(analysingContainer);
   };
+  
+  const checkIfAdultization = async (imageURL) => { // calls the computer vision analysis
+    try {
+      const payload = { image: imageURL };
 
-  const checkIfAdultization = (imageURL) => { // calls the computer vision analysis
+      // Requisição POST para a API dummy
+      const response = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    // on development 
+      // Converter a resposta em JSON
+      const data = await response.json();
 
-    return false
+      console.log("Resposta da API:", data);
+      return data.adultization_detected ? 1 : 0; // 1 -> censor; 2 -> ok
+
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+      return 2 // 2 -> erro
+    }
   };
+
 
   const removeAnalysing = (element, location) => { // remove the 'analyzing...' front end after the image has been analyzed
     const parent = element.parentElement;
@@ -193,6 +232,55 @@
     const textContainer = document.createElement('div');
     textContainer.textContent = 'Essa imagem potencialmente sexualiza crianças';
     textContainer.style.color = 'red';
+    textContainer.style.fontWeight = 'bold';
+    textContainer.style.textAlign = 'center';
+    textContainer.style.marginTop = '10px';
+    textContainer.style.fontSize = '1.2em';
+    textContainer.style.backgroundColor = 'rgba(86, 86, 86, 0.5)';
+    textContainer.style.padding = '5px 10px';
+    textContainer.style.borderRadius = '5px';
+
+    // Monta a hierarquia
+    alertContainer.appendChild(warningImage);
+    alertContainer.appendChild(textContainer);
+    parent.appendChild(alertContainer);
+  };
+
+  const showError = (element, location) => { // show the error front end if that was any error while analyzing
+    // Blur na imagem
+    element.style.filter = 'blur(20px)';
+
+    // Garante que o pai da imagem seja relativo
+    const parent = element.parentElement;
+    if (parent) {
+      if (getComputedStyle(parent).position === 'static') {
+        parent.style.position = 'relative';
+      }
+    }
+
+    // Cria container do alerta
+    const alertContainer = document.createElement('div');
+    alertContainer.style.position = 'absolute';
+    alertContainer.style.top = '0';
+    alertContainer.style.left = '0';
+    alertContainer.style.width = '100%';
+    alertContainer.style.height = '100%';
+    alertContainer.style.display = 'flex';
+    alertContainer.style.flexDirection = 'column';
+    alertContainer.style.justifyContent = 'center';
+    alertContainer.style.alignItems = 'center';
+    alertContainer.style.pointerEvents = 'none';
+
+    // Símbolo
+    const warningImage = document.createElement('img');
+    warningImage.src = chrome.runtime.getURL('images/error.svg');
+    warningImage.style.width = '20%';
+    warningImage.style.height = 'auto';
+    warningImage.style.filter = 'drop-shadow(0 0 10px yellow)';
+    // Texto
+    const textContainer = document.createElement('div');
+    textContainer.textContent = 'Erro ao analisar imagem';
+    textContainer.style.color = 'yellow';
     textContainer.style.fontWeight = 'bold';
     textContainer.style.textAlign = 'center';
     textContainer.style.marginTop = '10px';

@@ -14,7 +14,8 @@
       "resources": [
         "images/warning-sign.png",
         "images/checkmark.png",
-        "images/loading.gif"
+        "images/loading.gif",
+        "images/error.svg"
       ],
       "matches": ["*://*.instagram.com/*"]
     }
