@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # 1. Importe a biblioteca
 
 app = Flask(__name__)
+
+# Aplica o CORS à aplicação. Isso permite requisições de qualquer origem.
+CORS(app) 
 
 @app.route("/")
 def home():
