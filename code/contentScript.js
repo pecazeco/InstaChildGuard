@@ -68,14 +68,13 @@
 
     switch (location) {
       case "": // feed
-        const imageUrl = img.currentSrc; // url da imagem atual
+        const imageUrl = img.src; // url da imagem atual
         showAnalysing(img, location);
 
         const objects = await getObjectsOnImage(imageUrl); // analise e pega os objetos presentes na imagem
-        img.dataset.detectedObjects = objects; // guarda os objetos como uma propriedade do elemento
+        img.dataset.detectedObjects = JSON.stringify(objects); // guarda os objetos como uma propriedade do elemento
         removeAnalysing(img, ""); // remove o front end de analisando
-        writeObjectsOnElement(img, ""); // escreve os objetos em cima da imagem
-
+        drawBoxesOnImage(img, ""); // desenha bounding boxes na imagem
         break;
 
       case "stories":
@@ -214,12 +213,81 @@
     parent.appendChild(alertContainer);
   };
 
-  const getObjectsOnImage = (img) => {
+  const HF_TOKEN = "hf_XXXXXXXXXXXXXX";
+
+  const getObjectsOnImage = async (imageUrl) => {
     // detect the objects on image - call api
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/facebook/detr-resnet-50",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HF_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: imageUrl }),
+      }
+    );
+
+    let result = await response.json();
+    if (Array.isArray(result)) {
+      // return result.map((r) => r.label);
+      result = result.filter((object) => object.score >= 0.9);
+      console.log("image", imageUrl, "analysis", result);
+      return result;
+    } else {
+      console.log("Erro na detecção:", result);
+    }
   };
 
-  const writeObjectsOnElement = (img, location) => {
-    // show the text of the objects on the image
+  const drawBoxesOnImage = (img, location) => {
+    const objects = JSON.parse(img.dataset.detectedObjects);
+
+    const parent = img.parentElement;
+    parent.style.position = "relative";
+
+    const naturalWidth = img.naturalWidth; // tamanho original da imagem
+    const naturalHeight = img.naturalHeight;
+    const displayWidth = img.width; // tamanho no DOM
+    const displayHeight = img.height;
+
+    const scaleX = displayWidth / naturalWidth;
+    const scaleY = displayHeight / naturalHeight;
+
+    objects.forEach((obj) => {
+      const { label, box, score } = obj;
+
+      // reescala coordenadas
+      const x = box.xmin * scaleX;
+      const y = box.ymin * scaleY;
+      const w = (box.xmax - box.xmin) * scaleX;
+      const h = (box.ymax - box.ymin) * scaleY;
+
+      const boxEl = document.createElement("div");
+      boxEl.style.position = "absolute";
+      boxEl.style.left = `${x}px`;
+      boxEl.style.top = `${y}px`;
+      boxEl.style.width = `${w}px`;
+      boxEl.style.height = `${h}px`;
+      boxEl.style.border = "2px solid red";
+      boxEl.style.pointerEvents = "none";
+      boxEl.className = "objectBox";
+
+      const labelEl = document.createElement("div");
+      labelEl.innerText = `${label} (${(score * 100).toFixed(1)}%)`;
+      labelEl.style.position = "absolute";
+      labelEl.style.left = "0";
+      // labelEl.style.top = "-18px";
+      labelEl.style.background = "rgba(255,0,0,0.7)";
+      labelEl.style.color = "white";
+      labelEl.style.fontSize = "12px";
+      labelEl.style.padding = "2px 4px";
+      labelEl.style.borderRadius = "4px";
+      labelEl.className = "objectLabel";
+
+      boxEl.appendChild(labelEl);
+      parent.appendChild(boxEl);
+    });
   };
 
   chrome.runtime.onMessage.addListener((message) => {
