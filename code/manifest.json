@@ -9,8 +9,12 @@
       "js": ["contentScript.js"]
     }
   ],
+  "host_permissions": [
+    "https://www.instagram.com/*",
+    "https://api-inference.huggingface.co/*"
+  ],
   "web_accessible_resources": [
-    { 
+    {
       "resources": [
         "images/warning-sign.png",
         "images/checkmark.png",
