@@ -243,6 +243,15 @@
   const drawBoxesOnImage = (img, location) => {
     const objects = JSON.parse(img.dataset.detectedObjects);
 
+    console.log("objects", objects);
+    const typeObjects = objects.map((obj) => obj.label);
+    console.log("types", typeObjects);
+    const colors = [];
+    for (let i = 0; i < objects.length; i++) {
+      const hue = i * (360 / objects.length);
+      colors.push(hue);
+    }
+
     const parent = img.parentElement;
     parent.style.position = "relative";
 
@@ -254,7 +263,7 @@
     const scaleX = displayWidth / naturalWidth;
     const scaleY = displayHeight / naturalHeight;
 
-    objects.forEach((obj) => {
+    objects.forEach((obj, i) => {
       const { label, box, score } = obj;
 
       // reescala coordenadas
@@ -269,7 +278,7 @@
       boxEl.style.top = `${y}px`;
       boxEl.style.width = `${w}px`;
       boxEl.style.height = `${h}px`;
-      boxEl.style.border = "2px solid red";
+      boxEl.style.border = `4px solid hsl(${colors[i]}, 100%, 50%)`;
       boxEl.style.pointerEvents = "none";
       boxEl.className = "objectBox";
 
@@ -278,7 +287,7 @@
       labelEl.style.position = "absolute";
       labelEl.style.left = "0";
       // labelEl.style.top = "-18px";
-      labelEl.style.background = "rgba(255,0,0,0.7)";
+      labelEl.style.background = `hsla(${colors[i]}, 100%, 50%, 0.7)`;
       labelEl.style.color = "white";
       labelEl.style.fontSize = "12px";
       labelEl.style.padding = "2px 4px";
