@@ -1,3 +1,4 @@
 ignore/
 .vscode/
 code/node_modules/
+code/replacements.txt
