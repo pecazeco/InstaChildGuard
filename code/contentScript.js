@@ -1,6 +1,14 @@
 {
   let location = ""; // guarda onde estamos no instagram (feed, stories, reels, ...)
 
+  // Cria a sidebar fixa na lateral
+  const sidebar = document.createElement("div");
+  sidebar.id = "detected-sidebar";
+  sidebar.textContent = "Carregando...";
+  document.body.appendChild(sidebar);
+
+  const postsList = [];
+
   const checkInitialPosts = (location) => {
     // check the initial posts (before the page has been mutated) on the page (calls the necessary funcions for this)
     // Executa a função imediatamente para desfocar os posts que já estão na página.
@@ -11,6 +19,8 @@
           ...document.querySelectorAll('img[alt^="Photo shared by"]'),
         ];
         initialElements.forEach((element) => {
+          postsList.push(element);
+          element.dataset.addToList = "true";
           analyzeImage(element, location);
         });
         break;
@@ -39,7 +49,13 @@
           ...node.querySelectorAll('img[alt^="Photo shared by"]'),
         ];
         // checa cada post se deve censurar
-        posts.forEach((img) => analyzeImage(img, location));
+        posts.forEach((img) => {
+          if (!img.dataset.addToList) {
+            postsList.push(img);
+            img.dataset.addToList = "true";
+            analyzeImage(img, location);
+          }
+        });
         break;
 
       case "stories":
@@ -75,6 +91,7 @@
         img.dataset.detectedObjects = JSON.stringify(objects); // guarda os objetos como uma propriedade do elemento
         removeAnalysing(img, ""); // remove o front end de analisando
         drawBoxesOnImage(img, ""); // desenha bounding boxes na imagem
+        updateSidebar();
         break;
 
       case "stories":
@@ -213,7 +230,7 @@
     parent.appendChild(alertContainer);
   };
 
-  const HF_TOKEN = "hf_XXXXXXXXXXXXXX";
+  const HF_TOKEN = "hf_XXXXXXXXXXXXXXXXXXX";
 
   const getObjectsOnImage = async (imageUrl) => {
     // detect the objects on image - call api
@@ -278,7 +295,7 @@
       boxEl.style.top = `${y}px`;
       boxEl.style.width = `${w}px`;
       boxEl.style.height = `${h}px`;
-      boxEl.style.border = `4px solid hsl(${colors[i]}, 100%, 50%)`;
+      boxEl.style.border = `10px solid hsla(${colors[i]}, 100%, 50%, 0.8)`;
       boxEl.style.pointerEvents = "none";
       boxEl.className = "objectBox";
 
@@ -298,6 +315,57 @@
       parent.appendChild(boxEl);
     });
   };
+
+  const getImageAtCenter = () => {
+    const viewportCenterY = window.innerHeight / 2;
+    const viewportCenterX = window.innerWidth / 2;
+
+    for (const img of postsList) {
+      const rect = img.getBoundingClientRect();
+      if (
+        rect.top < viewportCenterY &&
+        rect.bottom > viewportCenterY &&
+        rect.left < viewportCenterX &&
+        rect.right > viewportCenterX
+      ) {
+        console.log("image on center", img);
+        return img; // retorn the image that is in the center of the screen
+      }
+    }
+  };
+
+  const updateSidebar = () => {
+    try {
+      const centerImg = getImageAtCenter(); // pick the image in the center of the screen
+      console.log("imagem no centro", centerImg);
+      const objects = JSON.parse(centerImg.dataset.detectedObjects);
+      const typeObjects = objects.map((obj) => obj.label);
+      console.log("center image objects", typeObjects);
+      const colors = [];
+      for (let i = 0; i < objects.length; i++) {
+        const hue = i * (360 / objects.length);
+        colors.push(hue);
+      }
+      if (centerImg && typeObjects) {
+        sidebar.innerHTML = "";
+        typeObjects.forEach((obj, i) => {
+          // updates the sidebar content to use the objects of the center image
+          const element = document.createElement("p");
+          element.textContent = obj;
+          sidebar.appendChild(element);
+          element.style.color = `hsl(${colors[i]}, 100%, 50%)`;
+        });
+      } else {
+        throw new Error("Without image on center or image without objects");
+      }
+    } catch (error) {
+      console.error(error);
+      sidebar.textContent = "Sem objetos";
+    }
+  };
+
+  window.addEventListener("scroll", updateSidebar);
+  window.addEventListener("load", updateSidebar);
 
   chrome.runtime.onMessage.addListener((message) => {
     location = message;

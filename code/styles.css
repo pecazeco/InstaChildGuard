@@ -1,0 +1,13 @@
+#detected-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 220px;
+  height: 100vh;
+  color: white;
+  font-size: xx-large;
+  font-family: sans-serif;
+  overflow-y: auto;
+  z-index: 999999; /* garante que fique por cima */
+  pointer-events: none;
+}
