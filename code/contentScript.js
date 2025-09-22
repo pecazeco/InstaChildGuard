@@ -109,59 +109,51 @@
   };
 
   const showAnalysing = (element, location) => {
-    // the 'analyzing...' front end
     const parent = element.parentElement;
-    if (!parent) return;
+    if (!parent) return; // Sai se não houver elemento pai
 
     // Evita adicionar múltiplos overlays de análise
     if (parent.querySelector(".analysing-container")) return;
 
-    // Garante que o pai da imagem seja relativo para o posicionamento
+    // Garante que o pai da imagem seja relativo para o posicionamento funcionar
     if (getComputedStyle(parent).position === "static") {
       parent.style.position = "relative";
     }
 
-    // Aplica um blur inicial
-    element.style.filter = "blur(10px)";
-
-    // Cria o container principal para o loading
+    // Cria o container principal da caixa
     const analysingContainer = document.createElement("div");
     analysingContainer.className = "analysing-container"; // Classe para poder remover depois
     analysingContainer.style.position = "absolute";
-    analysingContainer.style.top = "0";
-    analysingContainer.style.left = "0";
-    analysingContainer.style.width = "100%";
-    analysingContainer.style.height = "100%";
+    analysingContainer.style.top = "10px";
+    analysingContainer.style.right = "10px";
+    analysingContainer.style.backgroundColor = "gray";
+    analysingContainer.style.opacity = "80%";
+    analysingContainer.style.color = "white";
+    analysingContainer.style.padding = "5px 8px";
+    analysingContainer.style.borderRadius = "5px";
+    analysingContainer.style.fontSize = "3em";
     analysingContainer.style.pointerEvents = "none";
 
-    // Usa Flexbox para centralizar tudo
+    // Usa Flexbox para alinhar texto e imagem
     analysingContainer.style.display = "flex";
-    analysingContainer.style.flexDirection = "column"; // Organiza os itens em coluna (GIF em cima, texto embaixo)
-    analysingContainer.style.justifyContent = "center";
     analysingContainer.style.alignItems = "center";
 
-    // Cria o GIF de loading
-    const loadingGif = document.createElement("img");
-    loadingGif.src = chrome.runtime.getURL("images/loading.gif");
-    loadingGif.style.width = "80px"; // Tamanho fixo para o GIF
-    loadingGif.style.height = "auto";
-    loadingGif.style.filter =
-      "drop-shadow(0 0 4px #2896ff) drop-shadow(0 0 2px #2896ff)";
+    // Cria o texto
+    const textSpan = document.createElement("span");
+    textSpan.textContent = "Analisando...";
 
-    // Cria o texto "Analisando..."
-    const analysingText = document.createElement("div");
-    analysingText.textContent = "Analisando conteúdo...";
-    analysingText.style.color = "white";
-    analysingText.style.marginTop = "10px";
-    analysingText.style.fontSize = "1em";
-    analysingText.style.fontWeight = "bold";
-    analysingText.style.textShadow = "0 0 5px black"; // Sombra para legibilidade
+    // Cria o símbolo
+    const analysingImage = document.createElement("img");
+    analysingImage.src = chrome.runtime.getURL("images/loading.gif"); // Use o nome correto do seu arquivo!
+    analysingImage.style.height = "2em"; // Faz a altura da imagem ser igual à altura da fonte
+    analysingImage.style.width = "auto";
+    analysingImage.style.marginRight = "5px"; // Espaçamento entre o texto e o símbolo
 
-    // Monta o visual de análise
-    analysingContainer.appendChild(loadingGif);
-    analysingContainer.appendChild(analysingText);
+    // Monta a caixa
+    analysingContainer.appendChild(analysingImage);
+    analysingContainer.appendChild(textSpan);
 
-    // Adiciona tudo à página
+    // Adiciona a caixa ao pai da imagem original
     parent.appendChild(analysingContainer);
   };
 
