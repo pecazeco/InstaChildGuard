@@ -85,11 +85,11 @@
     switch (location) {
       case "": // feed
         const imageUrl = img.src; // url da imagem atual
-        showAnalysing(img, location);
+        showanalyzing(img, location);
 
         const objects = await getObjectsOnImage(imageUrl); // analise e pega os objetos presentes na imagem
         img.dataset.detectedObjects = JSON.stringify(objects); // guarda os objetos como uma propriedade do elemento
-        removeAnalysing(img, ""); // remove o front end de analisando
+        removeanalyzing(img, ""); // remove o front end de analisando
         drawBoxesOnImage(img, ""); // desenha bounding boxes na imagem
         updateSidebar();
         break;
@@ -108,12 +108,12 @@
     }
   };
 
-  const showAnalysing = (element, location) => {
+  const showanalyzing = (element, location) => {
     const parent = element.parentElement;
     if (!parent) return; // Sai se não houver elemento pai
 
     // Evita adicionar múltiplos overlays de análise
-    if (parent.querySelector(".analysing-container")) return;
+    if (parent.querySelector(".analyzing-container")) return;
 
     // Garante que o pai da imagem seja relativo para o posicionamento funcionar
     if (getComputedStyle(parent).position === "static") {
@@ -121,106 +121,86 @@
     }
 
     // Cria o container principal da caixa
-    const analysingContainer = document.createElement("div");
-    analysingContainer.className = "analysing-container"; // Classe para poder remover depois
-    analysingContainer.style.position = "absolute";
-    analysingContainer.style.top = "10px";
-    analysingContainer.style.right = "10px";
-    analysingContainer.style.backgroundColor = "gray";
-    analysingContainer.style.opacity = "80%";
-    analysingContainer.style.color = "white";
-    analysingContainer.style.padding = "5px 8px";
-    analysingContainer.style.borderRadius = "5px";
-    analysingContainer.style.fontSize = "3em";
-    analysingContainer.style.pointerEvents = "none";
-
-    // Usa Flexbox para alinhar texto e imagem
-    analysingContainer.style.display = "flex";
-    analysingContainer.style.alignItems = "center";
-
+    const analyzingContainer = document.createElement("div");
+    analyzingContainer.className = "analyzing-container";
     // Cria o texto
     const textSpan = document.createElement("span");
     textSpan.textContent = "Analisando...";
 
     // Cria o símbolo
-    const analysingImage = document.createElement("img");
-    analysingImage.src = chrome.runtime.getURL("images/loading.gif"); // Use o nome correto do seu arquivo!
-    analysingImage.style.height = "2em"; // Faz a altura da imagem ser igual à altura da fonte
-    analysingImage.style.width = "auto";
-    analysingImage.style.marginRight = "5px"; // Espaçamento entre o texto e o símbolo
+    const analyzingImage = document.createElement("img");
+    analyzingImage.className = "analyzing-image";
+    analyzingImage.src = chrome.runtime.getURL("images/loading.gif"); // Use o nome correto do seu arquivo!
 
     // Monta a caixa
-    analysingContainer.appendChild(analysingImage);
-    analysingContainer.appendChild(textSpan);
+    analyzingContainer.appendChild(analyzingImage);
+    analyzingContainer.appendChild(textSpan);
 
     // Adiciona a caixa ao pai da imagem original
-    parent.appendChild(analysingContainer);
+    parent.appendChild(analyzingContainer);
   };
 
-  const removeAnalysing = (element, location) => {
+  const removeanalyzing = (element, location) => {
     // remove the 'analyzing...' front end after the image has been analyzed
     const parent = element.parentElement;
     if (!parent) return;
 
-    // Remove o blur da imagem principal
-    element.style.filter = "";
-
     // Encontra e remove o container de análise
-    const analysisOverlay = parent.querySelector(".analysing-container");
+    const analysisOverlay = parent.querySelector(".analyzing-container");
     if (analysisOverlay) {
       parent.removeChild(analysisOverlay);
     }
   };
 
-  const showError = (element, location) => {
-    // show the error front end if that was any error while analyzing
-    // Blur na imagem
-    element.style.filter = "blur(20px)";
+  // const showError = (element, location) => {
+  //   // show the error front end if that was any error while analyzing
+  //   // Blur na imagem
+  //   element.style.filter = "blur(20px)";
 
-    // Garante que o pai da imagem seja relativo
-    const parent = element.parentElement;
-    if (parent) {
-      if (getComputedStyle(parent).position === "static") {
-        parent.style.position = "relative";
-      }
-    }
+  //   // Garante que o pai da imagem seja relativo
+  //   const parent = element.parentElement;
+  //   if (parent) {
+  //     if (getComputedStyle(parent).position === "static") {
+  //       parent.style.position = "relative";
+  //     }
+  //   }
 
-    // Cria container do alerta
-    const alertContainer = document.createElement("div");
-    alertContainer.style.position = "absolute";
-    alertContainer.style.top = "0";
-    alertContainer.style.left = "0";
-    alertContainer.style.width = "100%";
-    alertContainer.style.height = "100%";
-    alertContainer.style.display = "flex";
-    alertContainer.style.flexDirection = "column";
-    alertContainer.style.justifyContent = "center";
-    alertContainer.style.alignItems = "center";
-    alertContainer.style.pointerEvents = "none";
+  //   // Cria container do alerta
+  //   const alertContainer = document.createElement("div");
+  //   alertContainer.style.position = "absolute";
+  //   alertContainer.style.top = "0";
+  //   alertContainer.style.left = "0";
+  //   alertContainer.style.width = "100%";
+  //   alertContainer.style.height = "100%";
+  //   alertContainer.style.display = "flex";
+  //   alertContainer.style.flexDirection = "column";
+  //   alertContainer.style.justifyContent = "center";
+  //   alertContainer.style.alignItems = "center";
+  //   alertContainer.style.pointerEvents = "none";
 
-    // Símbolo
-    const warningImage = document.createElement("img");
-    warningImage.src = chrome.runtime.getURL("images/error.svg");
-    warningImage.style.width = "20%";
-    warningImage.style.height = "auto";
-    warningImage.style.filter = "drop-shadow(0 0 10px yellow)";
-    // Texto
-    const textContainer = document.createElement("div");
-    textContainer.textContent = "Erro ao analisar imagem";
-    textContainer.style.color = "yellow";
-    textContainer.style.fontWeight = "bold";
-    textContainer.style.textAlign = "center";
-    textContainer.style.marginTop = "10px";
-    textContainer.style.fontSize = "1.2em";
-    textContainer.style.backgroundColor = "rgba(86, 86, 86, 0.5)";
-    textContainer.style.padding = "5px 10px";
-    textContainer.style.borderRadius = "5px";
+  //   // Símbolo
+  //   const warningImage = document.createElement("img");
+  //   warningImage.src = chrome.runtime.getURL("images/error.svg");
+  //   warningImage.style.width = "20%";
+  //   warningImage.style.height = "auto";
+  //   warningImage.style.filter = "drop-shadow(0 0 10px yellow)";
+  //   // Texto
+  //   const textContainer = document.createElement("div");
+  //   textContainer.textContent = "Erro ao analisar imagem";
+  //   textContainer.style.color = "yellow";
+  //   textContainer.style.fontWeight = "bold";
+  //   textContainer.style.textAlign = "center";
+  //   textContainer.style.marginTop = "10px";
+  //   textContainer.style.fontSize = "1.2em";
+  //   textContainer.style.backgroundColor = "rgba(86, 86, 86, 0.5)";
+  //   textContainer.style.padding = "5px 10px";
+  //   textContainer.style.borderRadius = "5px";
 
-    // Monta a hierarquia
-    alertContainer.appendChild(warningImage);
-    alertContainer.appendChild(textContainer);
-    parent.appendChild(alertContainer);
-  };
+  //   // Monta a hierarquia
+  //   alertContainer.appendChild(warningImage);
+  //   alertContainer.appendChild(textContainer);
+  //   parent.appendChild(alertContainer);
+  // };
 
   const HF_TOKEN = "hf_XXXXXXXXXXXXXXXXXXX";
 
@@ -282,26 +262,17 @@
       const h = (box.ymax - box.ymin) * scaleY;
 
       const boxEl = document.createElement("div");
-      boxEl.style.position = "absolute";
+      boxEl.className = "object-box";
       boxEl.style.left = `${x}px`;
       boxEl.style.top = `${y}px`;
       boxEl.style.width = `${w}px`;
       boxEl.style.height = `${h}px`;
       boxEl.style.border = `10px solid hsla(${colors[i]}, 100%, 50%, 0.8)`;
-      boxEl.style.pointerEvents = "none";
-      boxEl.className = "objectBox";
 
       const labelEl = document.createElement("div");
+      labelEl.className = "object-label";
       labelEl.innerText = `${label} (${(score * 100).toFixed(1)}%)`;
-      labelEl.style.position = "absolute";
-      labelEl.style.left = "0";
-      // labelEl.style.top = "-18px";
       labelEl.style.background = `hsla(${colors[i]}, 100%, 50%, 0.7)`;
-      labelEl.style.color = "white";
-      labelEl.style.fontSize = "12px";
-      labelEl.style.padding = "2px 4px";
-      labelEl.style.borderRadius = "4px";
-      labelEl.className = "objectLabel";
 
       boxEl.appendChild(labelEl);
       parent.appendChild(boxEl);
