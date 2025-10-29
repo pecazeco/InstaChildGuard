@@ -1,0 +1,98 @@
+This is BibTeX, Version 0.99d
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: USPSC-TCC-modelo-EESC.aux
+Reallocating 'name_of_file' (item size: 1) to 31 items.
+The style file: USPSC-classe/abntex2-alf-USPSC.bst
+Reallocating 'name_of_file' (item size: 1) to 37 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-Errata.aux
+Reallocating 'name_of_file' (item size: 1) to 42 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-Dedicatoria.aux
+Reallocating 'name_of_file' (item size: 1) to 45 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-Agradecimentos.aux
+Reallocating 'name_of_file' (item size: 1) to 39 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-Epigrafe.aux
+Reallocating 'name_of_file' (item size: 1) to 37 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-Resumo.aux
+Reallocating 'name_of_file' (item size: 1) to 39 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-Abstract.aux
+Reallocating 'name_of_file' (item size: 1) to 49 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-AbreviaturasSiglas.aux
+Reallocating 'name_of_file' (item size: 1) to 39 items.
+A level-1 auxiliary file: USPSC-TA-PreTextual/USPSC-Simbolos.aux
+Reallocating 'name_of_file' (item size: 1) to 43 items.
+A level-1 auxiliary file: USPSC-TA-Textual/USPSC-Cap1-Introducao.aux
+Reallocating 'name_of_file' (item size: 1) to 48 items.
+A level-1 auxiliary file: USPSC-TA-Textual/USPSC-Cap2-Desenvolvimento.aux
+Reallocating 'name_of_file' (item size: 1) to 42 items.
+A level-1 auxiliary file: USPSC-TA-Textual/USPSC-Cap3-Conclusao.aux
+Reallocating 'name_of_file' (item size: 1) to 16 items.
+Reallocating 'name_of_file' (item size: 1) to 34 items.
+Reallocating 'name_of_file' (item size: 1) to 40 items.
+A level-1 auxiliary file: USPSC-TA-PosTextual/USPSC-Apendices.aux
+Reallocating 'name_of_file' (item size: 1) to 37 items.
+A level-1 auxiliary file: USPSC-TA-PosTextual/USPSC-Anexos.aux
+Reallocating 'name_of_file' (item size: 1) to 48 items.
+A level-1 auxiliary file: USPSC-TA-PosTextual/USPSC-IndicesRemissivos.aux
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'wiz_functions' (item size: 4) to 6000 items.
+"t" can't follow a literal---line 1293 of file USPSC-classe/abntex2-alf-USPSC.bst
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'wiz_functions' (item size: 4) to 9000 items.
+Database file #1: abntex2-options.bib
+Database file #2: USPSC-bib/USPSC-modelo-references.bib
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'glb_str_end' (item size: 4) to 20 items.
+Reallocating 'glb_str_ptr' (item size: 4) to 20 items.
+Reallocating 'global_strs' (item size: 1) to 4000000 items.
++---------------------------------------------------------+
+| Estilo bibliográfico abntex2-alf.bst versão v-1.9.7           |
+| Em caso de dúvidas ou problemas com este estilo procure |
+| http://www.abntex.net.br/                               |
++---------------------------------------------------------+
+You've used 19 entries,
+            6708 wiz_defined-function locations,
+            1268 strings with 11281 characters,
+and the built_in function-call counts, 10774 in all, are:
+= -- 1198
+> -- 37
+< -- 146
++ -- 225
+- -- 13
+* -- 543
+:= -- 1150
+add.period$ -- 31
+call.type$ -- 22
+change.case$ -- 74
+chr.to.int$ -- 26
+cite$ -- 7
+duplicate$ -- 732
+empty$ -- 1035
+format.name$ -- 47
+if$ -- 2711
+int.to.chr$ -- 11
+int.to.str$ -- 3
+missing$ -- 256
+newline$ -- 37
+num.names$ -- 5
+pop$ -- 241
+preamble$ -- 1
+purify$ -- 58
+quote$ -- 0
+skip$ -- 1350
+stack$ -- 1
+substring$ -- 402
+swap$ -- 259
+text.length$ -- 5
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 9
+warning$ -- 0
+while$ -- 20
+width$ -- 0
+write$ -- 119
+(There was 1 error message)
