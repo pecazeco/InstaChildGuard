@@ -3,3 +3,17 @@ ignore/
 code/node_modules/
 code/tests/img_tests/
 tcc/
+*.aux
+*.bbl
+*.blg
+*.idx
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.nav
+*.snm
+*.synctex.gz
+*.fls
+*.fdb_latexmk
