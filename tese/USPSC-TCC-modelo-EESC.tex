@@ -64,6 +64,7 @@ brazil				% o último idioma é o principal do documento
 % ---
 % Pacotes básicos - Fundamentais 
 % ---
+\usepackage{xurl} % para quebra de linhas de urls
 \usepackage[T1]{fontenc}		% Seleção de códigos de fonte.
 \usepackage[utf8]{inputenc}		% Codificação do documento (conversão automática dos acentos)
 \usepackage{lmodern}			% Usa a fonte Latin Modern
@@ -76,8 +77,8 @@ brazil				% o último idioma é o principal do documento
 \usepackage{color}				% Controle das cores
 \usepackage{graphicx}			% Inclusão de gráficos
 \usepackage{float} 				% Fixa tabelas e figuras no local exato
-\usepackage{chemfig}            % Para escrever reações químicas
-\usepackage{chemmacros}         % Para escrever reações químicas
+% \usepackage{chemfig}            % Para escrever reações químicas
+% \usepackage{chemmacros}         % Para escrever reações químicas
 \usepackage{tikz}				% Para escrever reações químicas e outros
 \usetikzlibrary{positioning}
 \usepackage{microtype} 			% para melhorias de justificação
@@ -97,6 +98,7 @@ brazil				% o último idioma é o principal do documento
 % Sistema autor-data
 \usepackage[alf, abnt-emphasize=bf, abnt-thesis-year=both, abnt-repeated-author-omit=no, abnt-last-names=abnt, abnt-etal-cite=3, abnt-etal-list=3, abnt-etal-text=it, abnt-and-type=e, abnt-doi=doi, abnt-url-package=none, abnt-verbatim-entry=no]{abntex2cite}
 \bibliographystyle{USPSC-classe/abntex2-alf-USPSC}
+% \bibliographystyle{abntex2-alf}
 % Se o idioma for o inglês, inclua % no comando acima e exclua o % do comando abaixo
 %\bibliographystyle{USPSC-classe/abntex2-alfeng-USPSC}
 
@@ -180,12 +182,12 @@ brazil				% o último idioma é o principal do documento
 % dados complementares para CAPA e FOLHA DE ROSTO
 % ---
 \universidade{UNIVERSIDADE DE S\~AO PAULO}
-\titulo{Modelo para TCC em \LaTeX\ utilizando o Pacote USPSC para a EESC}
-\titleabstract{Model for TCC in \LaTeX\ using the USPSC Package to the EESC}
-\tituloresumo{Modelo para TCC em \LaTeX\ utilizando o Pacote USPSC para a EESC}
-\autor{Jos\'e da Silva}
-\autorficha{Silva, Jos\'e da}
-\autorabr{SILVA, J.}
+\titulo{Prova de conceito: Extensão para navegadores \textit{web} para identificação de sexualização de menores}
+\titleabstract{Proof of concept: Web browser extension for identification of minor sexualization}
+\tituloresumo{Prova de conceito: Extensão para navegadores \textit{web} para identificação de sexualização de menores}
+\autor{Pedro Azevedo Coelho Carriello Corrêa}
+\autorficha{Corrêa, Pedro}
+\autorabr{CORRÊA, P.}
 
 \cutter{S856m}
 % Para gerar a ficha catalográfica sem o Código Cutter, basta 
@@ -193,14 +195,14 @@ brazil				% o último idioma é o principal do documento
 %\cutter{ }
 
 \local{S\~ao Carlos}
-\data{2023}
+\data{2025}
 % Quando for Orientador, basta incluir uma % antes do comando abaixo
 \renewcommand{\orientadorname}{Orientadora:}
 % Quando for Coorientadora, basta tirar a % do comando abaixo
 %\newcommand{\coorientadorname}{Coorientador:}
-\orientador{Profa. Dra. Elisa Gon\c{c}alves Rodrigues}
-\orientadorcorpoficha{orientadora Elisa Gon\c{c}alves Rodrigues}
-\orientadorficha{Rodrigues, Elisa Gon\c{c}alves, orient}
+\orientador{Profa. Dra. Maíra Martins da Silva}
+\orientadorcorpoficha{orientadora Maíra Martins da Silva}
+\orientadorficha{da Silva, Maíra Martins, orient}
 %Se houver co-orientador, inclua % antes das duas linhas (antes dos comandos \orientadorcorpoficha e \orientadorficha) 
 %          e tire a % antes dos 3 comandos abaixo
 %\coorientador{Prof. Dr. Jo\~ao Alves Serqueira}
@@ -333,7 +335,7 @@ brazil				% o último idioma é o principal do documento
 % Inserir errata
 % ---
 
-\include{USPSC-TA-PreTextual/USPSC-Errata}
+% \include{USPSC-TA-PreTextual/USPSC-Errata} % incluir errata
 
 % ---
 
@@ -410,13 +412,13 @@ brazil				% o último idioma é o principal do documento
 % ---
 % inserir lista de abreviaturas e siglas
 % ---
-\include{USPSC-TA-PreTextual/USPSC-AbreviaturasSiglas}
+% \include{USPSC-TA-PreTextual/USPSC-AbreviaturasSiglas} % incluir lista de abreviaturas e siglas
 % ---
 
 % ---
 % inserir lista de símbolos
 % ---
-\include{USPSC-TA-PreTextual/USPSC-Simbolos}
+% \include{USPSC-TA-PreTextual/USPSC-Simbolos} % incluir lista de símbolos
 % ---
 % ---
 % inserir o sumario
@@ -439,11 +441,21 @@ brazil				% o último idioma é o principal do documento
 % ---
 % Capítulo 2
 % ---
-\include{USPSC-TA-Textual/USPSC-Cap2-Desenvolvimento}
+\include{USPSC-TA-Textual/USPSC-Cap2-RevisaoBibliografica}
 
-% Capítulo 3 - Conclusão
 % ---
-\include{USPSC-TA-Textual/USPSC-Cap3-Conclusao}
+% Capítulo 3
+% ---
+\include{USPSC-TA-Textual/USPSC-Cap3-Desenvolvimento}
+
+% Capítulo 4
+% ---
+\include{USPSC-TA-Textual/USPSC-Cap4-Testes}
+% ---
+
+% Capítulo 5
+% ---
+\include{USPSC-TA-Textual/USPSC-Cap5-Conclusao}
 % ---
 
 % ----------------------------------------------------------
@@ -474,12 +486,12 @@ brazil				% o último idioma é o principal do documento
 % ----------------------------------------------------------
 % Anexos
 % ----------------------------------------------------------
-\include{USPSC-TA-PosTextual/USPSC-Anexos}
+% \include{USPSC-TA-PosTextual/USPSC-Anexos} % incluir anexos
 
 %---------------------------------------------------------------------
 % INDICE REMISSIVO
 %--------------------------------------------------------------------
-\include{USPSC-TA-PosTextual/USPSC-IndicesRemissivos}
+% \include{USPSC-TA-PosTextual/USPSC-IndicesRemissivos} % incluir índice remissivo
 
 %---------------------------------------------------------------------
 
