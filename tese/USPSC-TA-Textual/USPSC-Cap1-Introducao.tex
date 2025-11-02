@@ -1,10 +1,64 @@
+%!TEX root = tese/USPSC-TCC-modelo-EESC.tex
 %% USPSC-Introducao.tex
 
 % ----------------------------------------------------------
 % Introdução (exemplo de capítulo sem numeração, mas presente no Sumário)
 % ----------------------------------------------------------
-\chapter[Introdução]{Introdução}
-\label{Introdução}
+\chapter{Introdução} \label{Introdução}
+Este capítulo apresenta uma visão geral do trabalho, começando pela contextualização do cenário que motivou a pesquisa, 
+em seguida, é realizada a formulação do projeto e seus objetivos principais. 
+Também é feita uma delimitação do escopo do projeto, destacando o que será abordado e o que está fora do alcance deste trabalho.
+Por fim, é apresentada a estrutura geral do texto.
 
+\section{Contextualização} \label{sec:contextualizacao}
+Desde a publicação do vídeo ``adultização'' \cite{felca2025} no YouTube do influenciador conhecido como Felca em agosto de 2025, o debate sobre a influência das redes sociais no comportamento e desenvolvimento de crianças e adolescentes ganhou destaque na mídia e na sociedade. 
+O vídeo, que aborda a pressão social para que jovens adotem comportamentos considerados ``adultos'' precocemente, gerou uma série de discussões sobre os impactos psicológicos, sociais e educacionais dessa tendência.
 
-Parte inicial do texto, que contém a delimitação do assunto tratado, objetivos da pesquisa e outros elementos necessários para apresentar o tema do trabalho \cite{aguia2020}.
+No referido vídeo, Felca argumenta que a monetização indiscriminada das redes sociais tem contribuído para a produção de materiais cada vez mais extremos para garantir visibilidade e engajamento, o que levou a uma crescente de conteúdos feitos por adultos envolvendo crianças de maneira imprópria. 
+Como exemplos, no decorrer do vídeo são levantados casos como \textit{podcasts} apresentados por crinças sobre empreendedorismo, pais que abusam dos próprios filhos os forçando a produzir vídeos, e, até mesmo, casos de adultos que produzem conteúdos com alta carga de sexualização sobre crianças.
+
+Nesses casos de sexualização, além de atrair a visualização de outras crianças, que ainda não julgam o caráter impróprio do conteúdo, tais vídeos também atraem a atenção de predadores sexuais, o que naturaliza comportamentos potencialmente criminosos.
+O impacto da fala de Felca foi tão grande que, de acordo com a ONG SaferNet, o número de denúncias de pornografia infantil recebidas pela organização cresceu 114\% em uma semana desde a publicação do vídeo \cite{safernet2025}. 
+
+Felca destaca ainda o papel do algoritmo das plataformas digitais, que, priorizando o maior alcance possível, identifica o gosto dos predadores e o teor sexual das publicações, promovendo a conexão entre ambos. 
+Nesse cenário, o vídeo de Felca levanta questões importantes sobre a necessidade de regulamentação das redes sociais, a responsabilidade dos criadores de conteúdo e a proteção das crianças e adolescentes na era digital.
+
+Diante do debate acendido pelo vídeo denúncia de Felca, mais de 30 projetos de lei foram propostos na Câmara dos Deputados \cite{cnn2025} que tratam desde a proibição da monetização de conteúdos produzidos por crianças nas redes ou até tipificam como crime o processo de ``adultização'' citado por Felca.
+Para viabilizar essas possíveis novas leis, uma pergunta emerge: a tecnologia conseguiria identificar e sinalizar automaticamente conteúdos sexualizados envolvendo crianças nas redes sociais?
+
+\section{Objetivos} \label{sec:objetivos}
+O trabalho em questão busca realizar uma prova de conceito, explorando a viabilidade de um sistema automatizado para identificar e sinalizar conteúdos sexualizados envolvendo crianças especificamente no Instagram, 
+exemplificando o quanto a tecnologia pode ser utilizada para dificultar a conexão entre os predadores e tais conteúdos. 
+
+Para atingir os seus objetivos, o projeto visa o desenvolvimento de uma extensão para navegadores \textit{web} baseados em \textit{Chromium} feita em \textit{JavaScript} utilizando \textit{Manifest V3}. 
+Essas ferramentas foram escolhidas por serem amplamente utilizadas no desenvolvimento de extensões para navegadores.  
+A extensão se comunica no seu \textit{backend} com a API REST de modelos \textit{Large Language Models} (LLMs) para realizar a análise do conteúdo textual das postagens no Instagram.  
+
+Os mesmos modelos LLMs foram testados sistematicamente de maneira isolada, a partir da extração e classificação manual de postagens e comparação com a classificação automática feita pelos modelos por um \textit{script} Python.  
+
+Ao final, os objetivos se resumem em:
+\begin{enumerate}
+    \item Desenvolver uma extensão funcional para navegadores, incluindo:
+    \begin{enumerate}
+        \item \textit{backend}: lógica interna, integração com a página nativa do Instagram e comunicação com o modelo externo 
+        \item \textit{frontend}: visual responsivo e amigável ao usuário
+    \end{enumerate} 
+    \item Elaborar \textit{prompt} de entrada ao modelo que gere boa acurácia na identificação dos conteúdos.
+    \item Boa performance na execução da extensão, mantendo a navegação fluida.
+\end{enumerate}
+
+\section{Escopo do projeto} \label{sec:escopo_do_projeto}
+Vale ressaltar que o foco do trabalho está na prova de conceito do sistema, demonstrando que a tecnologia pode ser utilizada para mitigar o problema da sexualização de crianças nas redes sociais, 
+e não na criação de um produto finalizado e pronto para o mercado.
+
+No caso de um produto final, outros aspectos essenciais deveriam também ser considerados, como a segurança e a escalabilidade do sistema. 
+Sobre a segurança, destaca-se a privacidade dos dados dos usuários, já que, atualmente, todas as imagens das postagens analisadas pela aplicação são enviadas para os servidores do Google sob a chave de API vinculada ao autor desse projeto.
+
+A implementação do produto final não foi pensada em ser concluída pois essa extensão não foi considerada como tendo um público potencial bem definido: 
+o algoritmo de usuários comuns que não buscam acessar conteúdos sexualizados naturalmente não exibe tais postagens, já usuários potencialmente interessados em acessar esses conteúdos não fariam uso de uma ferramenta que os bloqueia.
+
+Visto isso, a extensão desenvolvida não será disponibilizada nas lojas oficiais de extensões dos navegadores, se tratando de um protótipo.
+Porém, o código-fonte JavaScript, o código Python utilizado para testes e os demais arquivos utilizados nessa tese estão disponíveis em um repositório público no GitHub \footnote{Repositório GitHub do projeto: \url{https://github.com/pecazeco/InstaChildGuard}.}.
+
+\section{Organização do texto} \label{sec:organizacao_do_texto}
+Escrever aqui como ficou a organização dos capítulos
