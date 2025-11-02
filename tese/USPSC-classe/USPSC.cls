@@ -749,7 +749,7 @@
     \bibmark
     \ifnobibintoc\else
     \phantomsection
-    \addcontentsline{toc}{chapter}{\uppercase{\bibname}}
+    \addcontentsline{toc}{chapter}{\MakeUppercase{\bibname}} % alterei pra forçar maiusculas sem erro
     \fi
     \prebibhook
 }
@@ -1139,7 +1139,7 @@
  \setboolean{abntex@apendiceousecao}{true}%
  \renewcommand{\appendixname}{#1}
  \ifthenelse{\boolean{ABNTEXsumario-abnt-6027-2012}}{
-   \renewcommand{\appendixtocname}{\uppercase{#2}}
+   \renewcommand{\appendixtocname}{\MakeUppercase{#2}} % alterei para forçar maiusculas sem erro
   }{%
   \renewcommand{\appendixtocname}{#2}} 
  \renewcommand{\appendixpagename}{#2}
@@ -1278,7 +1278,7 @@
 % ---
 
 % Chamanda para dados pre-textuais
-\include{USPSC-unidades}  
+% \include{USPSC-unidades}  
 %
 
 % ------------------------------------------------------------------------

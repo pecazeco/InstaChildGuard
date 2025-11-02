@@ -1290,7 +1290,7 @@ FUNCTION {format.title.for.label}
   while$
 s t = %title equals first word, dont use bbl.ldots
 %% 22/11/2023 Inclusão do "{" para corrigir \cite para entrada pelo título
-  {"{"t  "}{" * t
+  {{ "{" * t * "}" * }  % alterei aqui pra parar de dar erro
   abnt.cite.style #0 = {"u" change.case$ * } 'skip$ if$}
   {t bbl.ldots * "}{" * t
   abnt.cite.style #0 = {"u" change.case$} 'skip$ if$ * bbl.ldots *}
