@@ -9,6 +9,7 @@ tcc/
 *.idx
 *.lof
 *.log
+*.loq
 *.lot
 *.out
 *.toc
@@ -16,5 +17,6 @@ tcc/
 *.snm
 *.synctex.gz
 *.fls
+*.ilg
 *.fdb_latexmk
 tese/**/*.pdf
