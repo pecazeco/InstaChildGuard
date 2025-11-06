@@ -20,11 +20,72 @@ permitindo que as crianças participem do mundo adulto.
 Esses e outros estudos \cite{orman2020, cabezas2022} mostram que de fato é um consenso na literatura que o consumo e exposição precoce no mundo digital pode impactar negativamente o desenvolvimento de um ser humano,
 levando, em alguns casos, a uma ``adultização'' acelerada e descontrolada.  
 
-\section{Revisão de modelos para detecção de sexualização}
+\section{Revisão de modelos para detecção de sexualização} \label{sec:revisao_deteccao_sexualizacao}
+Há uma grande gama de modelos de IA, principalmente redes neurais de aprendizado profundo, voltadas à identificação de conteúdos sexualmente explícitos \footnote{10 APIs detectoras de conteúdos explicitos: \url{https://www.edenai.co/post/top-10-explicit-content-detection-apis}}.
+Tais modelos muitas vezes podem ser acessados por APIs e funcionam calculando a probabilidade do conteúdo passado ser explícito e comparam com um valor limite pré-definido para definir se trata-se ou não.
 
-\section{Revisão de modelos para identificação de crianças em imagens}
+Esse tipo de conteúdo comumente é chamado de NSFW (\textit{Not Suitable For Work}) 
+e APIs como a da Clarifai\footnote{API de NSFW da Clarifai: \url{https://clarifai.com/clarifai/main/models/nsfw-recognition}}
+ou a detecção SafeSearch integrada ao Google Cloud\footnote{SafeSearch: \url{https://docs.cloud.google.com/vision/docs/detecting-safe-search?hl=pt-br}}
+foram treinadas com milhares de imagens e podem analisar a explecitude em relação a diferentes rótulos além de nudez, 
+como violência, drogas ou médico. 
+Além disso, muitos desses modelos podem classificar diferentes níveis de nudez, como apenas algo apenas sugestivo ou totalmete explícito.
+
+Porém, a aplicação desse projeto expõe certas limitações e restrições sobre o uso dessas APIs:
+\begin{itemize}
+    \item As postagens do Instagram já passam por um filtro prévio feito por redes neurais convolucionais \cite{mohiuddin2024}, assim conteúdos totalmente explícitos já não irão aparecer.
+    Portanto, a API utilizada precisa conseguir identificar conteúdos levemente sugestivos, e não só os totalmente explícitos.
+    \item Já que a ideia não é fazer um produto final que gera alguma renda, restringe-se ao uso de APIs gratuitas.
+    \item Como o próprio Felca expõe em seu vídeo, muitas vezes os pedófilos enxergam uma visão destorcida da realidade, 
+    vendo interesse em publicações que a olhos normais não são sugestivos. 
+    Isso exige uma precisão na identificação dos conteúdos que torna conveniente o uso de linguagem natural para comunicação com o modelo.
+\end{itemize}
+
+Limitando-se aos modelos gratuitos, 
+como o \texttt{nsfw-cateforize.it}\footnote{\url{https://nsfw-categorize.it/}} 
+(que possui cota gratuita de apenas 10 imagens por dia),
+ou o \textit{open source} \texttt{nsfw\_image\_detection}\footnote{\url{https://huggingface.co/Falconsai/nsfw_image_detection}} 
+(que não diferencia diferentes níveis de nudez)
+as restrições ficam ainda mais difíceis de contornar. 
+
+\section{Revisão de modelos para identificação de crianças em imagens} \label{sec:revisao_identificacao_criancas}
+O projeto não visa simplesmente identificar a presença de conteúdo sugestivamente sexual, 
+mas sim identificar isso ligado especificamente a crianças. 
+Portanto, no caso de seguir a abordagem de redes neurais, 
+seria necessário de alguma forma combinar uma rede para identificação da explicitude (abordado na \autoref{sec:revisao_deteccao_sexualizacao})
+com uma para identificação de crianças.
+
+Recorrendo à literatura, é difícil encontrar um modelo robusto e confiável treinado especialmente para o reconhecimento de crianças, 
+porém, são amplamente encontradas redes de reconhecimento/detecção de objetos no geral \footnote{10 APIs de detecção de objetos: \url{https://www.edenai.co/post/top-10-object-detection-apis}}.
+Por exemplo, a API \texttt{general-image-recognition}\footnote{\url{https://clarifai.com/clarifai/main/models/general-image-recognition?tab=overview}} da Clarify
+foi treinada com 20 milhões de imagens e é capaz de reconhecer 10 mil ``conceitos'' pré-definidos, como objetos e até temas. 
+APIs de detecção muitas vezes podem delimitar na imagem os objetos contidos, como mostrado na \autoref{fig:identificacao_objetos}.
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de detecção em imagem}
+    \label{fig:identificacao_objetos}
+	\includegraphics[width=0.8\textwidth]{USPSC-img/objects-detection.png} \\
+	Fonte: \url{https://www.edenai.co/post/top-10-object-detection-apis}
+	\end{center}	
+\end{figure}
+
+Aqui, também há uma certa dificuldade: a delimitação de contexto utilizado para a rede.
+Seria necessário utilizar o modelo de detecção de objetos para, de alguma forma, delimitar a área de análise do de conteúdo explícito.
+
+Por exemplo, em uma imagem pode haver uma pessoa adulta em foco em uma posição sugestiva 
+e, ao fundo, uma criança passando. 
+Nesse exemplo, os dois modelos responderiam ``sim'', apesar de não haver exatamente sexualização infantil.
+Por outro lado, se em uma imagem houverem duas crianças juntas em uma posição sugestiva, 
+se enviarmos ao segundo modelo as duas crianças separadamente, pode ser que ele não identifique essa camada de sexualidade da imagem.
+
+Portanto, conclui-se que a integração entre diferentes redes pode se tornar altamente complexa, 
+ainda mais lidando com identificação de sutilezas implícitas.
 
 \section{Por que utilizar agente multimodal}
+Por conta das dificuldades citadas na \autoref{sec:revisao_identificacao_criancas} e na \autoref{sec:revisao_deteccao_sexualizacao}, 
+foi concluído que, modelos multimodais como o Gemini ou ChatGPT seriam mais convenientes, 
+
 Por que não treinar um modelo do zero e por que não refinar um modelo já existente
 
 Exemplificar casos de uso do mercado
