@@ -83,13 +83,38 @@ Portanto, conclui-se que a integração entre diferentes redes pode se tornar al
 ainda mais lidando com identificação de sutilezas implícitas.
 
 \section{Por que utilizar agente multimodal}
-Por conta das dificuldades citadas na \autoref{sec:revisao_identificacao_criancas} e na \autoref{sec:revisao_deteccao_sexualizacao}, 
-foi concluído que, modelos multimodais como o Gemini ou ChatGPT seriam mais convenientes, 
+Por conta das dificuldades relacionadas à integração entre modelos citada na \autoref{sec:revisao_identificacao_criancas}
+e as dificuldades de ajuste fino expostas na \autoref{sec:revisao_deteccao_sexualizacao}, 
+foi concluído que modelos multimodais, como Gemini da Google ou GPT da OpenAI seriam mais convenientes para a aplicação.
 
-Por que não treinar um modelo do zero e por que não refinar um modelo já existente
+Modelos chamados ``multimodais'' se referem aos que podem receber como entrada diferentes tipos de arquivos, 
+como vídeos, imagem, áudio e texto. 
+Aqui refere-se especificamente aos multimodais \textit{large language models} (LLM),
+que são treinados por aprendizado de máquina auto-supervisionado em uma vasta quantidade de dados 
+e capazes de entender e responder em linguagem natural. 
 
-Exemplificar casos de uso do mercado
+A capacidade de se comunicar em linguagem natural e o baixo custo são o que fazem esses modelos serem tão convenientes para esse projeto.
+Os ajustes para fazer a extensão identificar as sutilezas mencionadas na \autoref{sec:revisao_deteccao_sexualizacao}
+podem ser realizados simplesmente por meio da passagem de exemplos e explicação em palavras para o LLM,
+ao invés do ajuste de parâmetros que seria necessário no caso de lidar-se diretamente com uma rede neural.
+Além disso, utilizar unicamente a LLM para identificar adultização resolve o problema da integração entre modelos. 
+
+Mas afinal, é possível atingir uma boa acurácia deixando de escolher ferramentas específias de detecção de imagem para adotar-se uma ferramenta tão generalista?
+Em um estudo de \citeonline{than2024}, 
+foram comparadas as performance de várias LLMs com as de redes neurais de aprendizado profundo no contexto de detecção de tumores.
+As redes neurais convolucionais foram pré-treinadas com milhões de imagens gerais e então feito um \textit{fine-tuning} com algumas centenas de imagens médicas.
+Ao final, de todos os modelos testados, o que se saiu melhor em todos os critérios foi o Gemini 1.5 Pro.
+
+Inserir imagem aqui das tabelas 
+
+No estudo citado, foi concluído que modelos multimodais podem performar até melhor que redes de aprendizado profundo na falta de dados suficientes de treinamento.
+O artigo também destaca a possibilidade de maior explicabilidade via texto dos multimodais, que indicam de maneira mais intuitiva como as decisões foram feitas.
+
+Inserir imagem de explicabilidade
+
+Enfim, como foi demonstrado, é totalmente possível utilizar modelos multimodais e consiliar uma boa acurácia com a conveniência de se comunicar com a ferramenta utilizando linguagem natural. 
 
 \section{Agentes multimodais gratuitos disponíveis}
+comparar modelos 
 
 \section{Técnicas de \textit{Prompt Engineering}}
