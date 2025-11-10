@@ -66,7 +66,7 @@ APIs de detecção muitas vezes podem delimitar na imagem os objetos contidos, c
 	\caption{Exemplo de detecção em imagem}
     \label{fig:identificacao_objetos}
 	\includegraphics[width=0.8\textwidth]{USPSC-img/objects-detection.png} \\
-	Fonte: \url{https://www.edenai.co/post/top-10-object-detection-apis}
+	\legend{Fonte: \url{https://www.edenai.co/post/top-10-object-detection-apis}}
 	\end{center}	
 \end{figure}
 
@@ -103,18 +103,153 @@ Mas afinal, é possível atingir uma boa acurácia deixando de escolher ferramen
 Em um estudo de \citeonline{than2024}, 
 foram comparadas as performance de várias LLMs com as de redes neurais de aprendizado profundo no contexto de detecção de tumores.
 As redes neurais convolucionais foram pré-treinadas com milhões de imagens gerais e então feito um \textit{fine-tuning} com algumas centenas de imagens médicas.
-Ao final, de todos os modelos testados, o que se saiu melhor em todos os critérios foi o Gemini 1.5 Pro.
+Ao final, de todos os modelos testados, o que se saiu melhor em todos os critérios foi o Gemini 1.5 Pro (\autoref{fig:than_tabela_comparacao}).
 
-Inserir imagem aqui das tabelas 
+\begin{table}[htb]
+    \centering
+    \caption{Comparação da performance dos modelos}
+    \label{fig:than_tabela_comparacao}
+    \begin{subfigure}[htb]{0.45\textwidth} 
+        \centering
+        \caption{Pré-treinados de aprendizado profundo}
+        \includegraphics[width=\linewidth]{USPSC-img/performance-cnn.png}
+    \end{subfigure}
+    \hspace{0.02\textwidth}
+    \begin{subfigure}[htb]{0.45\textwidth}
+        \centering
+        \caption{Multimodais}
+        \includegraphics[width=\linewidth]{USPSC-img/performance-multimodal.png}
+    \end{subfigure} 
+    \legend{Fonte: \cite{than2024}}
+\end{table}
 
 No estudo citado, foi concluído que modelos multimodais podem performar até melhor que redes de aprendizado profundo na falta de dados suficientes de treinamento.
-O artigo também destaca a possibilidade de maior explicabilidade via texto dos multimodais, que indicam de maneira mais intuitiva como as decisões foram feitas.
+O artigo também destaca a possibilidade de maior explicabilidade via dos multimodais, que indicam de maneira mais intuitiva como as decisões foram feitas.
+A \autoref{fig:than_explicabilidade_texto} mostra um exemplo dessa explicação em texto, 
+já na \autoref{fig:than_explicabilidade_imagem} foi solicitado ao modelo gerar um mapa de calor destacando onde o tumor foi detectado.
 
-Inserir imagem de explicabilidade
+\begin{figure}[htb]
+    \centering
+    \caption{Exemplos de explicabilidade}
+    \label{fig:than_explicabilidade}
+    \begin{subfigure}[htb]{0.45\textwidth} 
+        \centering
+        \caption{Explicação em texto}
+        \label{fig:than_explicabilidade_texto}
+        \includegraphics[width=\linewidth]{USPSC-img/explicabilidade.png}
+    \end{subfigure}
+    \hspace{0.02\textwidth}
+    \begin{subfigure}[htb]{0.45\textwidth}
+        \centering
+        \caption{Explicação em imagem}
+        \label{fig:than_explicabilidade_imagem}
+        \includegraphics[width=\linewidth]{USPSC-img/explicabilidade-heatmap.png}
+    \end{subfigure} 
+    \legend{Fonte: \cite{than2024}}
+\end{figure}
 
 Enfim, como foi demonstrado, é totalmente possível utilizar modelos multimodais e consiliar uma boa acurácia com a conveniência de se comunicar com a ferramenta utilizando linguagem natural. 
 
-\section{Agentes multimodais gratuitos disponíveis}
-comparar modelos 
+\section{Comparação de APIs multimodais gratuitas disponíveis}
+
+Como já citado como uma das restrições para o projeto na \autoref{sec:revisao_deteccao_sexualizacao},
+vamos nos limitar às APIs de LLMs gratuitas, ou melhor, que pelo menos oferecem uma margem de uso gratuito suficiente para a aplicação.
+Geralmente os limites de uso são dados em números de solicitações (\textit{requests}) solicitados e número de tokens utilizados.  
+Nessa seção, as principais opções encontradas de provedores gratuitos são expostas.
+
+\subsection{Cerebras}
+
+Cerebra\footnote{\url{https://www.cerebras.ai/}} é uma empresa que fornece uma API com várias opções de modelos \textit{open source}.
+Dentre os modelos, atualmente temos o GPT OSS 120B (feito pela OpenAI), alguns modelos Llama (feitos pela Meta) e alguns Qwen (Alibaba Cloud).
+
+A Cerebra declara prover a ``infraestrutura mais rápida de IA'' do mundo. 
+Isso pois ela possui um processador próprio feito com foco em IA que, segundo ela, é o mais rápido que existe.
+Esse destaque pode ser observado no gráfico da \autoref{fig:cerebra_performance}.
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Comparação de performance de provedores de IA utilizando mesmo modelo}
+    \label{fig:cerebra_performance}
+	\includegraphics[width=0.9\textwidth]{USPSC-img/cerebra-performance.jpg} \\
+	\legend{Fonte: \url{https://www.cerebras.ai/blog/cerebras-inference-3x-faster}}
+	\end{center}	
+\end{figure}
+
+Os limites de uso gratuito dependem do modelo a ser escolhido. 
+No caso do modelo da Meta \texttt{llama-3.3-70b}, por exemplo, os limites são listados no \autoref{quad:cerebra_limites}:
+
+\begin{quadro}[htb]
+    \centering
+    \caption{Limites de Uso da Cerebra}
+    \label{quad:cerebra_limites}
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Categoria} & \textbf{Por minuto} & \textbf{Por hora} & \textbf{Por dia} \\
+        \hline
+        \textbf{Solicitações} & 30 & 900 & 14400 \\
+        \hline
+        \textbf{Uso de Tokens} & 64 mil & 1 milhão & 1 milhão \\
+        \hline
+    \end{tabular}
+\end{quadro}
+
+\subsection{Groq}
+
+Assim como a Cerebra, Groq\footnote{\url{https://groq.com/}} também possui um processador proprietário focado em IA e fornece uma série de modelos \textit{open source}.
+Aqui, são oferecidos ainda mais opções que a Cerebra, incluindo alguns desenvolvidos pela própria empresa.
+
+Considerando os limites do modelo \texttt{llama-3.3-70b-versatile} apresentados no \autoref{quad:groq_limites},
+percebe-se que os valores são consideravelmente mais restritivos que os da Cerebra. 
+
+\begin{quadro}[htb]
+    \centering
+    \caption{Limites de Uso da Cerebra}
+    \label{quad:groq_limites}
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Categoria} & \textbf{Por minuto} & \textbf{Por dia} \\
+        \hline
+        \textbf{Solicitações} & 30 & 1000 \\
+        \hline
+        \textbf{Uso de Tokens} & 12 mil & 100 mil \\
+        \hline
+    \end{tabular}
+\end{quadro}
+
+\subsection{Mistral}
+
+A Mistral\footnote{\url{https://mistral.ai/}} desenvolve os seus próprios modelos, sendo alguns \textit{open source} e outros fechados.
+A performance dos seus modelos não está entre as melhores, mas os limites de uso são bem generosos. 
+O Mistral Medium 3, por exemplo, possibilita o uso de 500 mil tokens por minuto e até 1 bilhão por dia, 
+tornando essa API uma boa opção caso o uso de tokens for muito alto. 
+
+\subsection{Gemini}
+
+A Google disponibiliza uma API\footnote{\url{https://aistudio.google.com/}} para acesso aos seus modelos proprietários, que são todos códigos fechados.
+Dentre os modelos do Google que possuem limite de requisições por minuto suficientemente alto para o projeto, 
+o Gemini 2.5 Flash é o de melhor performance.
+
+\begin{quadro}[htb]
+    \centering
+    \caption{Limites do Gemini 2.5 Flash}
+    \label{quad:gemini_limites}
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Categoria} & \textbf{Por minuto} & \textbf{Por dia} \\
+        \hline
+        \textbf{Solicitações} & 10 & 250 \\
+        \hline
+        \textbf{Uso de Tokens} & 250 mil & - \\
+        \hline
+    \end{tabular}
+\end{quadro}
+
+De acordo com a empresa, o Gemini 2.5 Flash é 
+``útil para a maioria das tarefas complexas, enquanto tem um equilibrio entre qualidade, custo e latência''.
+Sendo assim, é voltado para uso geral, rodando de maneira veloz com um desempenho nas respostas não tão atrás da opção mais avançada do Gemini, a 2.5 Pro \cite{teamgoogle2025}.
+
+Esse modelo atualmente se posiciona muito bem nos \textit{benchmarks} quando comparado a outros focados em uso geral:
+está na posição mais alta no site MMMU \cite{mmmu2023} dentre os modelos apresentados nas últimas seções,
+e o LiveBench \cite{livebench2025} também o coloca entre os melhores, ainda mais comparando com os \textit{open source}.
 
 \section{Técnicas de \textit{Prompt Engineering}}
