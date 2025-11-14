@@ -1,6 +1,4 @@
 {
-  const API_KEY = "API_KEY_HERE"; // substitua pela sua chave de API
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
   let location = ""; // guarda onde estamos no instagram (feed, stories, reels, ...)
 
   const checkInitialPosts = (location) => {
@@ -171,9 +169,49 @@
   };
 
   /**
-   * Nova função que redimensiona uma imagem e a converte para base64.
+   * Verifica se a imagem deve ser censurada, delegando a análise
+   * para o background script.
+   *
+   * @param {string} imageURL A URL da imagem a ser analisada.
+   * @returns {Promise<number>} Retorna 0 (ok), 1 (censurar), ou 2 (erro).
+   */
+  const checkIfAdultization = async (imageURL) => {
+    try {
+      // 1. Converte a imagem para Base64 AQUI MESMO no content script
+      //    Usando a sua função original que funciona no DOM.
+      const imageParts = await resizeImageAndConvertToBase64(
+        imageURL,
+        768,
+        0.8
+      );
+
+      // 2. Envia os DADOS (não a URL) para o background script
+      const response = await chrome.runtime.sendMessage({
+        type: "ANALYZE_IMAGE_DATA", // Novo tipo de ação
+        imageParts: imageParts, // Envia o objeto { mimeType, data }
+      });
+
+      // 3. Processa a resposta do background
+      if (response && typeof response.status === "number") {
+        return response.status; // Retorna o status (0, 1, ou 2)
+      } else {
+        console.error("Resposta inválida do background script:", response);
+        return 2; // Erro
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao processar imagem ou enviar mensagem:",
+        error.message
+      );
+      return 2; // Erro
+    }
+  };
+
+  /**
+   * Função original (SUA) que redimensiona uma imagem e a converte para base64.
+   * Ela funciona aqui no content script pois tem acesso ao 'document' e 'Image'.
    * @param {string} imageUrl - A URL da imagem a ser processada.
-   * @param {number} maxWidth - A largura máxima desejada para a imagem. A altura será ajustada proporcionalmente.
+   * @param {number} maxWidth - A largura máxima desejada.
    * @param {number} quality - A qualidade da imagem JPEG (de 0.0 a 1.0).
    * @returns {Promise<{mimeType: string, data: string}>} - Um objeto com o mimeType e os dados em base64.
    */
@@ -184,8 +222,7 @@
   ) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      // ESSENCIAL para carregar imagens de outros domínios (como o do Instagram) no canvas.
-      img.crossOrigin = "anonymous";
+      img.crossOrigin = "anonymous"; // Essencial para canvas
 
       img.onload = () => {
         const canvas = document.createElement("canvas");
@@ -214,83 +251,13 @@
       img.onerror = (err) => {
         reject(
           new Error(
-            "Não foi possível carregar a imagem. Pode ser um problema de CORS."
+            "Não foi possível carregar a imagem. Pode ser um problema de CORS no contentScript."
           )
         );
       };
 
       img.src = imageUrl;
     });
-  };
-
-  const checkIfAdultization = async (imageURL) => {
-    // calls the computer vision analysis
-    try {
-      // 1. Converte a URL da imagem para o formato que a API precisa (base64)
-      const imageParts = await resizeImageAndConvertToBase64(imageURL, 768);
-
-      // 2. Monta o corpo (body) da requisição para a API
-      const body = {
-        contents: [
-          {
-            parts: [
-              {
-                text: `
-                  Responda essas duas perguntas separado por ponto e vírgula (;):
-                  - "Sim", se a imagem contém pelo menos uma pessoa, e "Não", caso contrário.
-                  - Descreva em uma frase o que está contido nessa imagem
-                  
-                  Formatação: 
-                    "Sim/Não; descrição"
-                  Exemplo: 
-                  a) "Sim; Uma criança pequena está brincando com um cachorro em um parque."
-                  b) "Não; Uma paisagem com montanhas e um lago."
-
-                  Observe que antes do ";" deve haver apenas "Sim" ou "Não", sem mais nada.
-                `,
-              },
-              {
-                inline_data: {
-                  mime_type: imageParts.mimeType,
-                  data: imageParts.data,
-                },
-              },
-            ],
-          },
-        ],
-      };
-
-      // 3. Faz a chamada para a API do Gemini usando fetch
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        console.error(
-          "Erro na API do Google:",
-          response.status,
-          await response.text()
-        );
-        return 2; // erro
-      }
-
-      const data = await response.json();
-
-      // 4. Extrai o texto da resposta
-      const responseText = data.candidates[0].content.parts[0].text;
-      console.log("Resposta da API:", responseText);
-
-      // 5. Verifica se a resposta indica que há uma pessoa
-      const shouldCensor = responseText.trim().toLowerCase().startsWith("sim");
-      return shouldCensor ? 1 : 0; // 1 -> censurar; 0 -> ok
-    } catch (error) {
-      console.error("Erro ao processar a imagem:", error);
-      return 2; // 2 -> erro
-    }
   };
 
   const removeAnalysing = (element, location) => {
