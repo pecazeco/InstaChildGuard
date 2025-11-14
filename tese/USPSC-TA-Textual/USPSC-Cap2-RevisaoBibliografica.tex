@@ -1,7 +1,8 @@
 %!TEX root = tese/main.tex
 \chapter{Revisão bibliográfica} \label{chap:revisao_bibliografica}
 Aqui é apresentada a fundamentação teórica do trabalho, 
-por meio da análise de estudos prévios dos temas relevantes para o desenvolvimento do projeto e a justificativa das decisões metodológicas adotadas.
+por meio da análise de estudos prévios dos temas relevantes para o desenvolvimento do projeto e 
+que embasam a justificativa das metodologias adotadas.
 
 \section{Estudos sobre ``adultização'' nas redes sociais}
 Atualmente, é amplamente estudado na literatura como as redes sociais impactam o crescimento de crianças.
@@ -48,7 +49,7 @@ ou o \textit{open source} \texttt{nsfw\_image\_detection}\footnote{\url{https://
 (que não diferencia diferentes níveis de nudez)
 as restrições ficam ainda mais difíceis de contornar. 
 
-\section{Revisão de modelos para identificação de crianças em imagens} \label{sec:revisao_identificacao_criancas}
+\section{Revisão de modelos para identificação de crianças} \label{sec:revisao_identificacao_criancas}
 O projeto não visa simplesmente identificar a presença de conteúdo sugestivamente sexual, 
 mas sim identificar isso ligado especificamente a crianças. 
 Portanto, no caso de seguir a abordagem de redes neurais, 
@@ -105,7 +106,7 @@ foram comparadas as performance de várias LLMs com as de redes neurais de apren
 As redes neurais convolucionais foram pré-treinadas com milhões de imagens gerais e então feito um \textit{fine-tuning} com algumas centenas de imagens médicas.
 Ao final, de todos os modelos testados, o que se saiu melhor em todos os critérios foi o Gemini 1.5 Pro (\autoref{fig:than_tabela_comparacao}).
 
-\begin{table}[htb]
+\begin{quadro}[htb]
     \centering
     \caption{Comparação da performance dos modelos}
     \label{fig:than_tabela_comparacao}
@@ -121,7 +122,7 @@ Ao final, de todos os modelos testados, o que se saiu melhor em todos os critér
         \includegraphics[width=\linewidth]{USPSC-img/performance-multimodal.png}
     \end{subfigure} 
     \legend{Fonte: \cite{than2024}}
-\end{table}
+\end{quadro}
 
 No estudo citado, foi concluído que modelos multimodais podem performar até melhor que redes de aprendizado profundo na falta de dados suficientes de treinamento.
 O artigo também destaca a possibilidade de maior explicabilidade via dos multimodais, que indicam de maneira mais intuitiva como as decisões foram feitas.
@@ -203,7 +204,7 @@ percebe-se que os valores são consideravelmente mais restritivos que os da Cere
 
 \begin{quadro}[htb]
     \centering
-    \caption{Limites de Uso da Cerebra}
+    \caption{Limites de Uso do Groq}
     \label{quad:groq_limites}
     \begin{tabular}{|l|c|c|}
         \hline
