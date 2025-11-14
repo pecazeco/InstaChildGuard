@@ -3,6 +3,55 @@
 
 \section{Metodologia} \label{sec:metodologia}
 
-\section{Algoritmo} \label{sec:algoritmo}
+No decorrer dessa seção serão definidas as ferramentas utilizadas para implementação do projeto em si e dos testes realizados.
 
-\section{}
+\subsection{Manifest V3}
+Extensões de navegador são pequenos módulos de \textit{software} que personalizam um navegador da web. 
+Os navegadores normalmente permitem uma variedade de extensões, incluindo modificações na interface do usuário, gerenciamento de \textit{cookies}, bloqueio de anúncios e scripts e estilos personalizados de páginas da web.
+
+O Manifest V3\footnote{Mudanças do Manifest V3: \url{https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3?hl=pt-br}} (em referência ao arquivo de manifesto contido nas extensões) é a mais recente grande versão da API de extensões do Chrome
+e visa modernizar a arquitetura de extensões e melhorar a segurança e o desempenho do navegador.
+Ele adota APIs declarativas para diminuir a necessidade de acesso excessivamente amplo e permitir uma implementação mais eficiente, 
+substitui páginas de fundo por ``Service Workers'' com recursos limitados para reduzir o uso de recursos e proíbe código hospedado remotamente. 
+
+A escolha de uso do Manifest V3 se dá pois muitos navegadores suportam essa API.
+Basicamente, todos os baseados no projeto Chromium são compatíveis, como Brave, Microsoft Edge, Opera, Vivaldi 
+e, claro, o Google Chrome. Isso torna o uso dessa API bastante recomendada.
+
+Para desenvolver uma extensão usando Manifest V3, é necessário criar um manifesto (\texttt{manifest.json}), 
+arquivo que lista uma série de informações básicas sobre a extensão, e o navegador o usa realizar as configurações necessárias.
+O \autoref{cap:apendice_manifest} contém o manifesto elaborado para o projeto, e inclui 
+a versão do Manifest, o nome da extensão, a sua descrição, os caminhos para os códigos utilizados, as permissões necessárias, os arquivos das imagens utilizadas e outras informações.
+
+Para esse extensão, os componentes mais importantes são o ``content script'' (\texttt{contentScript.js}) e o ``background service worker'' (\texttt{background.js}).
+O content script é a parte da extensão que consegue conversar diretamente com o DOM (\textit{Document Object Model}) da página que o navegador está acessando,
+que é basicamente a estrutura em si do site, ou seja, tudo o que o usuário vê.
+O content script não é capaz de receber as permissões mais elevadas requisitadas no manifesto, 
+para isso, ele precisa enviar uma mensagem para o background service worker, que possui esse privilégio e o retorna com a informação solicitada.
+Toda essa aparente complicação a mais garante a segurança da extensão \cite{extensionvulnerabilities2010}.
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Arquitetura completa de uma extensão}
+    \label{fig:extensions_arquitetura}
+	\includegraphics[width=0.8\textwidth]{USPSC-img/extensions-architecture.png} \\
+	\legend{Fonte: \url{https://youtu.be/TRwYaZPJ0h8?si=2gh3gnVSlcj5LRXF&t=194}}
+	\end{center}	
+\end{figure}
+
+
+
+\subsection{Identificação de postagens do Instagram}
+como é a estrutura de postagens do instagram
+
+\subsection{Testes}
+Criar conta fake, pesquisar se houve alguma mudança que hoje ta mais dificil
+
+\section{Algoritmo} \label{sec:algoritmo}
+Explicação geral do que acontec
+
+\subsection{\textit{Backend}}
+
+\subsection{\textit{Frontend}}
+
+\subsection{Realização de testes}
