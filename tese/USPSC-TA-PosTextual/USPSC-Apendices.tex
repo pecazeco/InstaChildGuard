@@ -16,5 +16,73 @@ Arquivo \texttt{manifest.json} usado para definir configurações gerais da exte
 ]{../code/manifest.json}
 Fonte: elaborado pelo autor
 
+\chapter{Documentação de chamada das APIs} \label{cap:apendice_doc_apis}
+
+Pela documentação oficial da API do Google uma chamada pode ser feita como exemplificada pelo \autoref{lst:gemini_api_doc}.
+
+\begin{lstlisting}[
+		language=sh, 
+		label={lst:gemini_api_doc}, 
+		caption={Exemplo de envio de imagem à API do Gemini 2.5 Flash}
+	]
+curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
+-H "x-goog-api-key: $GEMINI_API_KEY" \
+-H 'Content-Type: application/json' \
+-X POST \
+-d '{
+    "contents": [{
+        "parts":[
+            {
+                "inline_data": {
+                    "mime_type":"'"$MIME_TYPE"'",
+                    "data": "'"$IMAGE_B64"'"
+                }
+            },
+            {"text": "Caption this image."}
+        ]
+    }]
+}' 2> /dev/null
+\end{lstlisting}
+Fonte: \url{https://ai.google.dev/gemini-api/docs/image-understanding?hl=pt-br#rest}
+
+Já pela documentação da Groq, a chamada pode ser feita conforme o \autoref{lst:groq_api_doc}.
+
+\begin{lstlisting}[
+		language=sh, 
+		label={lst:groq_api_doc}, 
+		caption={Exemplo de envio de imagem à API do Groq}
+	]
+curl "https://api.groq.com/openai/v1/chat/completions" \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${GROQ_API_KEY}" \
+  -d '{
+         "messages": [
+           {
+             "role": "user",
+             "content": [
+               {
+                 "type": "text",
+                 "text": "What'\''s in this image?"
+               },
+               {
+                 "type": "image_url",
+                 "image_url": {
+                   "url": "'https://upload.wikimedia.org/wikipedia/commons/f/f2/LPU-v1-die.jpg'"
+                 }
+               }
+             ]
+           }
+         ],
+         "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+         "temperature": 1,
+         "max_completion_tokens": 1024,
+         "top_p": 1,
+         "stream": false,
+         "stop": null
+       }'
+\end{lstlisting}
+Fonte: \url{https://console.groq.com/docs/vision}
+
 \end{apendicesenv}
 % ---

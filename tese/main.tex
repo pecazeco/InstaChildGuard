@@ -276,6 +276,8 @@ brazil				% o último idioma é o principal do documento
 \definecolor{background}{HTML}{EEEEEE}
 \definecolor{delim}{RGB}{20,105,176}
 \colorlet{numb}{magenta!60!black}
+\colorlet{keywordcolor}{blue!70!black} % Cor para palavras-chave (ex: for, while)
+\colorlet{stringcolor}{red!80!black}   % Cor para strings (texto entre aspas)
 
 \lstdefinelanguage{json}{
     basicstyle=\normalfont\ttfamily,
@@ -304,6 +306,21 @@ brazil				% o último idioma é o principal do documento
       {\}}{{{\color{delim}{\}}}}}{1}
       {[}{{{\color{delim}{[}}}}{1}
       {]}{{{\color{delim}{]}}}}{1},
+}
+
+\lstset{
+    basicstyle=\normalfont\ttfamily\footnotesize,
+    backgroundcolor=\color{background},
+    frame=lines,
+    numbers=left,
+    numberstyle=\scriptsize\color{numb},
+    stepnumber=1,
+    numbersep=8pt,
+    breaklines=true,
+    showstringspaces=false,
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{gray}
 }
 
 \begin{document}

@@ -176,35 +176,20 @@ Esse destaque pode ser observado no gráfico da \autoref{fig:cerebra_performance
 	\end{center}	
 \end{figure}
 
-Os limites de uso gratuito dependem do modelo a ser escolhido. 
-No caso do modelo da Meta \texttt{llama-3.3-70b}, por exemplo, os limites são listados no \autoref{quad:cerebra_limites}:
-
-\begin{quadro}[htb]
-    \centering
-    \caption{Limites de Uso da Cerebra}
-    \label{quad:cerebra_limites}
-    \begin{tabular}{|l|c|c|c|}
-        \hline
-        \textbf{Categoria} & \textbf{Por minuto} & \textbf{Por hora} & \textbf{Por dia} \\
-        \hline
-        \textbf{Solicitações} & 30 & 900 & 14400 \\
-        \hline
-        \textbf{Uso de Tokens} & 64 mil & 1 milhão & 1 milhão \\
-        \hline
-    \end{tabular}
-\end{quadro}
+Porém, o que inviabiliza o uso da Cerebras é que, no momento, a sua API REST de inferência pública não suporta diretamente a entrada de imagens para modelos multimodais.
+Embora a Cerebras tenha capacidade e documentação para treinar modelos multimodais como o LLaVA (que combinam visão e linguagem), a API de inferência e seus SDKs (Python, Node.js) são focados em modelos de linguagem de texto, como a família LLaMA e Qwen.
 
 \subsection{Groq}
 
 Assim como a Cerebra, Groq\footnote{\url{https://groq.com/}} também possui um processador proprietário focado em IA e fornece uma série de modelos \textit{open source}.
 Aqui, são oferecidos ainda mais opções que a Cerebra, incluindo alguns desenvolvidos pela própria empresa.
 
-Considerando os limites do modelo \texttt{llama-3.3-70b-versatile} apresentados no \autoref{quad:groq_limites},
-percebe-se que os valores são consideravelmente mais restritivos que os da Cerebra. 
+No geral, os limites da Groq são bem mais restritivos que os da Cerebra, 
+porém aqui eles disponibilizam pela API REST acesso a dois modelos multimodais, os Llama 4 Scout e Llama 4 Maverick.
 
 \begin{quadro}[htb]
     \centering
-    \caption{Limites de Uso do Groq}
+    \caption{Limites de Uso do Llama 4 Scout pela Groq}
     \label{quad:groq_limites}
     \begin{tabular}{|l|c|c|}
         \hline
@@ -212,7 +197,7 @@ percebe-se que os valores são consideravelmente mais restritivos que os da Cere
         \hline
         \textbf{Solicitações} & 30 & 1000 \\
         \hline
-        \textbf{Uso de Tokens} & 12 mil & 100 mil \\
+        \textbf{Uso de Tokens} & 30 mil & 500 mil \\
         \hline
     \end{tabular}
 \end{quadro}
@@ -258,11 +243,9 @@ Por se tratar de um modelo estado da arte dentro das opções de resposta rápid
 a escolha do uso do Gemini 2.5 Flash foi a natural.
 No caso da Mistral, seus limites são bem mais do que o suficiente para a aplicação, 
 mas a sua performance não é tão boa, logo não foi escolhida.
-Cerebras possui opções bem abrangentes do mundo das LLMs de código aberto e, por isso, 
-também foi escolhida para teste. 
-Já  a Groq possui algumas opções a mais que a Cerebra, mas nenhuma que justifique o seu uso, 
-considerando que suas restrições são bem menos generosas.
+Cerebras foi descartada por não dar acesso por API ao envio de imagens. 
+Já a Groq, apesar de ter restrições mais severas, dá acesso a dois modelos multimodais e foi considerada para uso.
 
-Portanto, os testes utilizaram algumas LLMs disponibilizadas pela Cerebra e o modelo da Google.
+Portanto, os testes utilizaram os Llama 4 Scout/Maverick disponibilizados pela Groq e o modelo da Google.
 
 \section{Técnicas de \textit{Prompt Engineering}}
