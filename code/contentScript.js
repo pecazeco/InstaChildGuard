@@ -59,6 +59,7 @@
   };
 
   const checkElement = async (img, location) => {
+    startTime = Date.now();
     // check element and calls the front end funcions and the checkIfAdultization
     // Verifica se a imagem já foi ou está sendo analisada. Se sim, para a execução.
     if (img.dataset.analysisState) {
@@ -72,15 +73,17 @@
       case "": // feed
         const imageUrl = img.currentSrc; // url da imagem atual
         showAnalysing(img, location);
-
         console.log("Analisando o elemento:", img);
-        // setTimeout(async () => { // simular um tempo de espera (pra testes)
         const response = await checkIfAdultization(imageUrl); // checa se contem conteudo de sexualizacao
-        // const response = 1;
         // Marca a imagem como "concluída"
         img.dataset.analysisState = "complete";
-
         removeAnalysing(img, location);
+
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime < 7000) {
+          setTimeout(async () => {}, 7000 - elapsedTime); // tempo de espera (pra evitar limite de requisições)
+        }
+
         switch (response) {
           case 0:
             // Not censored -> show that it was checked
@@ -96,7 +99,6 @@
           default:
             break;
         }
-        // }, 2000);
         break;
 
       case "stories":
