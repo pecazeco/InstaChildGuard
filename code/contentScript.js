@@ -80,8 +80,9 @@
         removeAnalysing(img, location);
 
         const elapsedTime = Date.now() - startTime;
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         if (elapsedTime < 7000) {
-          setTimeout(async () => {}, 7000 - elapsedTime); // tempo de espera (pra evitar limite de requisições)
+          await delay(7000 - elapsedTime); // tempo de espera (pra evitar limite de requisições)
         }
 
         switch (response) {
