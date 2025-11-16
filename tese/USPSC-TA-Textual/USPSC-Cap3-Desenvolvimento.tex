@@ -39,19 +39,67 @@ Toda essa aparente complicação a mais garante a segurança da extensão \cite{
 	\end{center}	
 \end{figure}
 
+\subsection{Uso das APIs}
 
-
-\subsection{Identificação de postagens do Instagram}
-como é a estrutura de postagens do instagram
+Um exemplo de chamada das APIs REST utilizadas por meio de cURL pode ser visto no \autoref{cap:apendice_doc_apis}.
+As chamadas foram adaptadas para o uso em JavaScript, utilizando a função \texttt{fetch()}, que é nativa da linguagem e permite fazer requisições HTTP assíncronas.
 
 \subsection{Testes}
-Criar conta fake, pesquisar se houve alguma mudança que hoje ta mais dificil
+Os passos da metodologia adotada para a realização dos testes, respectivos motivos das decisões tomadas e observações foram as seguintes:
 
-\section{Algoritmo} \label{sec:algoritmo}
-Explicação geral do que acontec
+\begin{enumerate}
+	\item Criação de uma conta alternativa no Instagram
+	\begin{itemize}
+		\item Visando utilizar um algoritmo limpo, sem interferências de histórico ou preferências pessoais.
+		\item Buscando não contaminar do perfil original do autor.
+	\end{itemize}
+	\item Diminuir o controle de conteúdo sensível nas configurações\footnote{Configuração de controle de conteúso sensível: \url{https://about.instagram.com/blog/announcements/introducing-sensitive-content-control}} da conta.
+	\item Identificar e seguir perfis buscando por palavras chave relacionadas a crianças e a sexualização.
+	\begin{itemize}
+		\item Perfis que possuem na ``bio'' avisos falando que o perfil é monitorado por pais indicam que se trata possivelmente de uma criança.
+		\item O Instagram restringe a busca por termos relacionados a sexualização de crianças diretamente (\autoref{fig:aviso_abuso}), logo, é necessário buscar os termos de sexualização e de crianças separadamente.
+	\end{itemize}
+	\item Navegar pelo feed e curtir e abrir comentários das postagens que tem algum tipo de sugestão sexual de crianças.
+	\item Extrair (fazer download) de imagens que aparecerem no feed, avaliando manualmente se contém ou não sexualização infantil.
+	\begin{itemize}
+		\item Baixar metade sendo imagens que contenham sexualização de crianças e outra metade sendo imagens que não contenham, para ter resultados não enviesados.
+	\end{itemize}
+	\item Rodar scripts Python (\autoref{sec:script_testes}) desenvolvidos para avaliar as imagens baixadas utilizando o mesmo prompt utilizado na extensão.
+	\begin{itemize}
+		\item Utilizar scripts possibilita testes sistemáticos, garantindo que os testes serão realizados sempre sobre as mesmas imagens e de maneira mais ágil do que ficar navegando no feed e anotando os resultados.
+		\item Foram feitos um script para cada API (Google e Groq), já que cada uma possui uma forma distinta de realizar a requisição.
+	\end{itemize}
+	\item Realizar adaptações no prompt do modelo buscando a maior acurácia possível.
+	\item Repetir os últimos 2 passos até alcançar um resultado satisfatório. 
+	\item Substituir o conjunto do melhor API + modelo + prompt no código da extensão JavaScript.
+\end{enumerate}
 
-\subsection{\textit{Backend}}
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Aviso de abuso sexual}
+    \label{fig:aviso_abuso}
+	\includegraphics[width=0.5\textwidth]{USPSC-img/aviso-abuso-sexual.png} \\
+	\legend{Fonte: Instagram}
+	\end{center}	
+\end{figure}
+
+\section{Código} \label{sec:codigo}
+Em um primeiro momento, a extensão proposta apenas analisa as postagens do Instagram dispostas no ``feed'', 
+e somente as imagens. Não são avaliados os ``stories'' ou vídeos, porém, como o foco aqui é a prova de conceito, 
+abranger esses casos seria uma adaptação de código, pois se o algoritmo funciona bem para a as imagens do feed, 
+é natural também funcionar para os stories ou vídeos. 
+Além disso, o código foi estruturado deixando aberturas para ser adaptado à outras abas do Instagram (reels, stories, explore), 
+o que será explicado na \autoref{sec:backend}.
+
+A explicação do funcionamento dos códigos desenvolvidos será dividida em três partes:
+o \textit{backend} (onde a lógica do código e requisições acontecem), 
+o \textit{frontend} (que se encarrega de montar o visual para o usuário),
+e os scripts de teste utilizados para validar o funcionamento do \textit{backend}.
+
+Vale enfatizar que, como já disponibilizado na \autoref{sec:escopo_do_projeto}, todo o código-fonte completo do projeto está disponível em um repositório público no GitHub.
+
+\subsection{\textit{Backend}} \label{sec:backend}
 
 \subsection{\textit{Frontend}}
 
-\subsection{Realização de testes}
+\subsection{Script para testes} \label{sec:script_testes}
