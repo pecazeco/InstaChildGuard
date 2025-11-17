@@ -56,45 +56,103 @@
     }
   };
 
-  const checkElement = async (img, location) => {
-    startTime = Date.now();
-    // check element and calls the front end funcions and the checkIfAdultization
-    // Verifica se a imagem já foi ou está sendo analisada. Se sim, para a execução.
+  /**
+   * 'checkElement' (O Despachante)
+   * Verifica se uma imagem está pronta para ser processada.
+   * Se estiver, chama processImage().
+   * Se não estiver, adiciona um ouvinte 'load'.
+   */
+  const checkElement = (img, location) => {
     if (img.dataset.analysisState) {
       return;
     }
 
     // Marca a imagem como "analisando" para evitar que seja processada novamente.
     img.dataset.analysisState = "pending";
+    console.log("Observado:", img);
+
+    // 3. Verifica se a imagem já está carregada (ex: posts iniciais)
+    // 'complete' = o browser terminou de carregar
+    // 'currentSrc' = tem uma fonte de imagem válida
+    if (img.complete && img.currentSrc) {
+      console.log(
+        "Imagem já carregada, processando imediatamente:",
+        img.currentSrc
+      );
+      processImage(img, location); // Processa agora
+    } else {
+      // 4. Imagem é nova. Temos de esperar que ela carregue.
+      console.log("Imagem nova, aguardando 'load' event:", img.src);
+
+      const onLoad = () => {
+        console.log("'load' event disparado, processando:", img.currentSrc);
+        processImage(img, location);
+        // Limpa os ouvintes
+        img.removeEventListener("load", onLoad);
+        img.removeEventListener("error", onError);
+      };
+
+      const onError = () => {
+        console.error(
+          "Erro ao carregar imagem no DOM (src pode estar inválido):",
+          img.src
+        );
+        img.dataset.analysisState = "error";
+        showError(img, location); // Mostra o erro visual
+        // Limpa os ouvintes
+        img.removeEventListener("load", onLoad);
+        img.removeEventListener("error", onError);
+      };
+
+      img.addEventListener("load", onLoad);
+      img.addEventListener("error", onError);
+    }
+  };
+
+  /**
+   * NOVA FUNÇÃO 'processImage' (O Trabalhador)
+   * (Esta é a sua função 'checkElement' antiga, renomeada)
+   * Contém a lógica de análise e UI.
+   */
+  const processImage = async (img, location) => {
+    let startTime = Date.now();
+
+    // Atualiza o estado
+    img.dataset.analysisState = "processing";
 
     switch (location) {
       case "": // feed
-        const imageUrl = img.currentSrc; // url da imagem atual
+        const imageUrl = img.currentSrc; // Agora temos a certeza que isto é válido
+
+        // Uma verificação de segurança final
+        if (!imageUrl) {
+          console.error(
+            "processImage foi chamado mas currentSrc está vazio.",
+            img
+          );
+          img.dataset.analysisState = "error";
+          showError(img, location);
+          return;
+        }
+
         showAnalysing(img, location);
-        console.log("Analisando o elemento:", img);
-        const response = await checkIfAdultization(imageUrl); // checa se contem conteudo de sexualizacao
-        // Marca a imagem como "concluída"
+        console.log("Analisando o elemento:", imageUrl);
+
+        const response = await checkIfAdultization(imageUrl);
+
         img.dataset.analysisState = "complete";
         removeAnalysing(img, location);
 
-        const elapsedTime = Date.now() - startTime;
-        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-        if (elapsedTime < 7000) {
-          await delay(7000 - elapsedTime); // tempo de espera (pra evitar limite de requisições)
-        }
-
         switch (response) {
           case 0:
-            // Not censored -> show that it was checked
             showChecked(img, location);
             break;
           case 1:
-            // Censor
             showCensored(img, location);
             break;
           case 2:
-            // error
             showError(img, location);
+            break;
           default:
             break;
         }
@@ -102,15 +160,14 @@
 
       case "stories":
         break;
+      // ... resto do seu switch
+    }
 
-      case "reels":
-        break;
-
-      case "explore":
-        break;
-
-      default: // não sabemos onde estamos
-        break;
+    const elapsedTime = Date.now() - startTime;
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    if (elapsedTime < 7000) {
+      await delay(7000 - elapsedTime);
+      return;
     }
   };
 
@@ -171,30 +228,15 @@
     parent.appendChild(analysingContainer);
   };
 
-  /**
-   * Verifica se a imagem deve ser censurada, delegando a análise
-   * para o background script.
-   *
-   * @param {string} imageURL A URL da imagem a ser analisada.
-   * @returns {Promise<number>} Retorna 0 (ok), 1 (censurar), ou 2 (erro).
-   */
   const checkIfAdultization = async (imageURL) => {
     try {
-      // 1. Converte a imagem para Base64 AQUI MESMO no content script
-      //    Usando a sua função original que funciona no DOM.
-      const imageParts = await resizeImageAndConvertToBase64(
-        imageURL,
-        768,
-        0.8
-      );
-
-      // 2. Envia os DADOS (não a URL) para o background script
+      // 1. Envia a URL para o background
       const response = await chrome.runtime.sendMessage({
-        type: "ANALYZE_IMAGE_DATA", // Novo tipo de ação
-        imageParts: imageParts, // Envia o objeto { mimeType, data }
+        type: "ANALYZE_IMAGE_URL", // Assegure-se que o background ouve por este tipo
+        url: imageURL,
       });
 
-      // 3. Processa a resposta do background
+      // 2. Processa a resposta do background
       if (response && typeof response.status === "number") {
         return response.status; // Retorna o status (0, 1, ou 2)
       } else {
@@ -203,64 +245,11 @@
       }
     } catch (error) {
       console.error(
-        "Erro ao processar imagem ou enviar mensagem:",
+        "Erro ao enviar mensagem para o background:",
         error.message
       );
       return 2; // Erro
     }
-  };
-
-  /**
-   * Função original (SUA) que redimensiona uma imagem e a converte para base64.
-   * Ela funciona aqui no content script pois tem acesso ao 'document' e 'Image'.
-   * @param {string} imageUrl - A URL da imagem a ser processada.
-   * @param {number} maxWidth - A largura máxima desejada.
-   * @param {number} quality - A qualidade da imagem JPEG (de 0.0 a 1.0).
-   * @returns {Promise<{mimeType: string, data: string}>} - Um objeto com o mimeType e os dados em base64.
-   */
-  const resizeImageAndConvertToBase64 = (
-    imageUrl,
-    maxWidth = 768,
-    quality = 0.8
-  ) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous"; // Essencial para canvas
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        // Calcula as novas dimensões mantendo a proporção
-        const scale = maxWidth / img.width;
-        const newWidth = maxWidth;
-        const newHeight = img.height * scale;
-
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-
-        // Desenha a imagem redimensionada no canvas
-        ctx.drawImage(img, 0, 0, newWidth, newHeight);
-
-        // Converte o canvas para um Data URL (que contém a string base64)
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-
-        resolve({
-          mimeType: "image/jpeg",
-          data: dataUrl.split(",")[1], // Pega apenas a parte base64 da string
-        });
-      };
-
-      img.onerror = (err) => {
-        reject(
-          new Error(
-            "Não foi possível carregar a imagem. Pode ser um problema de CORS no contentScript."
-          )
-        );
-      };
-
-      img.src = imageUrl;
-    });
   };
 
   const removeAnalysing = (element, location) => {
