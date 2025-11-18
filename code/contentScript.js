@@ -1,36 +1,7 @@
 {
   let location = ""; // guarda onde estamos no instagram (feed, stories, reels, ...)
 
-  const checkInitialPosts = (location) => {
-    // check the initial posts (before the page has been mutated) on the page (calls the necessary funcions for this)
-    // Executa a função imediatamente para desfocar os posts que já estão na página.
-    switch (location) {
-      case "": // feed
-        const initialElements = [
-          ...document.querySelectorAll('img[alt^="Photo by"]'),
-          ...document.querySelectorAll('img[alt^="Photo shared by"]'),
-        ];
-        initialElements.forEach((element) => {
-          checkElement(element, location);
-        });
-        break;
-
-      case "stories":
-        break;
-
-      case "reels":
-        break;
-
-      case "explore":
-        break;
-
-      default: // não sabemos onde estamos
-        break;
-    }
-  };
-
-  const mutationHandler = (node, location) => {
-    // handle with the new nodes that have shown up after page mutation
+  const checkEachPost = (node, location) => {
     switch (location) {
       case "": // feed
         // Pega os filhos desse nó que sao posts
@@ -63,6 +34,7 @@
    * Se não estiver, adiciona um ouvinte 'load'.
    */
   const checkElement = (img, location) => {
+    // Evita processar a mesma imagem múltiplas vezes
     if (img.dataset.analysisState) {
       return;
     }
@@ -109,11 +81,6 @@
     }
   };
 
-  /**
-   * NOVA FUNÇÃO 'processImage' (O Trabalhador)
-   * (Esta é a sua função 'checkElement' antiga, renomeada)
-   * Contém a lógica de análise e UI.
-   */
   const processImage = async (img, location) => {
     let startTime = Date.now();
 
@@ -122,7 +89,7 @@
 
     switch (location) {
       case "": // feed
-        const imageUrl = img.currentSrc; // Agora temos a certeza que isto é válido
+        const imageUrl = img.currentSrc;
 
         // Uma verificação de segurança final
         if (!imageUrl) {
@@ -160,7 +127,6 @@
 
       case "stories":
         break;
-      // ... resto do seu switch
     }
 
     const elapsedTime = Date.now() - startTime;
@@ -422,7 +388,7 @@
 
   chrome.runtime.onMessage.addListener((message) => {
     location = message;
-    checkInitialPosts(location);
+    checkEachPost(document, location);
   });
 
   // Cria um observador de mutação para lidar com o carregamento dinâmico de posts.
@@ -435,7 +401,7 @@
         mutation.addedNodes.forEach((node) => {
           // Verifica se o nó adicionado é um elemento HTML
           if (node.nodeType === 1) {
-            mutationHandler(node, location); // calls the handler (considering where we are on instagram)
+            checkEachPost(node, location); // checa os posts dentro desse nó
           }
         });
       }

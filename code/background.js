@@ -116,7 +116,7 @@ async function performImageAnalysis(imageURL) {
     const responseText = data.candidates[0].content.parts[0].text;
     console.log("background.js: Resposta da API:", responseText);
 
-    // 5. Verifica se a resposta indica que há uma pessoa
+    // 5. Verifica resposta para decidir censura
     const shouldCensor = responseText.trim().toLowerCase().startsWith("sim");
     return shouldCensor ? 1 : 0; // 1 -> censurar; 0 -> ok
   } catch (error) {
