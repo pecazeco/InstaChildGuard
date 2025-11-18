@@ -1,0 +1,97 @@
+.analysing-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column; /* Organiza os itens em coluna (GIF em cima, texto embaixo) */
+  justify-content: center;
+  align-items: center;
+}
+.analysing-gif {
+  width: 80px;
+  height: auto;
+  filter: drop-shadow(0 0 4px #2896ff) drop-shadow(0 0 2px #2896ff);
+}
+.analysing-text {
+  color: white;
+  margin-top: 10px;
+  font-size: 1em;
+  font-weight: bold;
+  text-shadow: 0 0 5px black; /* Sombra para legibilidade */
+}
+.censor-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+.censor-image {
+  width: 20%;
+  height: auto;
+  filter: drop-shadow(0 0 10px red);
+}
+.censor-text {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 1.2em;
+  background-color: rgba(86, 86, 86, 0.5);
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+.error-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+.error-image {
+  width: 20%;
+  height: auto;
+  filter: drop-shadow(0 0 10px yellow);
+}
+.error-text {
+  color: yellow;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 1.2em;
+  background-color: rgba(86, 86, 86, 0.5);
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+.checked-box {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: gray;
+  opacity: 80%;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+.checkmark-image {
+  height: 1em; /* Faz a altura da imagem ser igual à altura da fonte */
+  width: auto;
+  margin-right: 5px; /* Espaçamento entre o texto e o símbolo */
+}

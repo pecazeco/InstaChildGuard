@@ -138,7 +138,6 @@
   };
 
   const showAnalysing = (element, location) => {
-    // the 'analyzing...' front end
     const parent = element.parentElement;
     if (!parent) return;
 
@@ -152,44 +151,20 @@
 
     // Aplica um blur inicial
     element.style.filter = "blur(10px)";
-
     // Cria o container principal para o loading
     const analysingContainer = document.createElement("div");
-    analysingContainer.className = "analysing-container"; // Classe para poder remover depois
-    analysingContainer.style.position = "absolute";
-    analysingContainer.style.top = "0";
-    analysingContainer.style.left = "0";
-    analysingContainer.style.width = "100%";
-    analysingContainer.style.height = "100%";
-    analysingContainer.style.pointerEvents = "none";
-
-    // Usa Flexbox para centralizar tudo
-    analysingContainer.style.display = "flex";
-    analysingContainer.style.flexDirection = "column"; // Organiza os itens em coluna (GIF em cima, texto embaixo)
-    analysingContainer.style.justifyContent = "center";
-    analysingContainer.style.alignItems = "center";
-
+    analysingContainer.className = "analysing-container";
     // Cria o GIF de loading
     const loadingGif = document.createElement("img");
     loadingGif.src = chrome.runtime.getURL("images/loading.gif");
-    loadingGif.style.width = "80px"; // Tamanho fixo para o GIF
-    loadingGif.style.height = "auto";
-    loadingGif.style.filter =
-      "drop-shadow(0 0 4px #2896ff) drop-shadow(0 0 2px #2896ff)";
-
+    loadingGif.className = "analysing-gif";
     // Cria o texto "Analisando..."
     const analysingText = document.createElement("div");
     analysingText.textContent = "Analisando conteúdo...";
-    analysingText.style.color = "white";
-    analysingText.style.marginTop = "10px";
-    analysingText.style.fontSize = "1em";
-    analysingText.style.fontWeight = "bold";
-    analysingText.style.textShadow = "0 0 5px black"; // Sombra para legibilidade
-
+    analysingText.className = "analysing-text";
     // Monta o visual de análise
     analysingContainer.appendChild(loadingGif);
     analysingContainer.appendChild(analysingText);
-
     // Adiciona tudo à página
     parent.appendChild(analysingContainer);
   };
@@ -222,10 +197,8 @@
     // remove the 'analyzing...' front end after the image has been analyzed
     const parent = element.parentElement;
     if (!parent) return;
-
     // Remove o blur da imagem principal
     element.style.filter = "";
-
     // Encontra e remove o container de análise
     const analysisOverlay = parent.querySelector(".analysing-container");
     if (analysisOverlay) {
@@ -248,38 +221,18 @@
 
     // Cria container do alerta
     const alertContainer = document.createElement("div");
-    alertContainer.style.position = "absolute";
-    alertContainer.style.top = "0";
-    alertContainer.style.left = "0";
-    alertContainer.style.width = "100%";
-    alertContainer.style.height = "100%";
-    alertContainer.style.display = "flex";
-    alertContainer.style.flexDirection = "column";
-    alertContainer.style.justifyContent = "center";
-    alertContainer.style.alignItems = "center";
-    alertContainer.style.pointerEvents = "none";
-
+    alertContainer.className = "censor-container";
     // Símbolo
     const warningImage = document.createElement("img");
     warningImage.src = chrome.runtime.getURL("images/warning-sign.png");
-    warningImage.style.width = "20%";
-    warningImage.style.height = "auto";
-    warningImage.style.filter = "drop-shadow(0 0 10px red)";
+    warningImage.className = "censor-image";
     // Texto
-    const textContainer = document.createElement("div");
-    textContainer.textContent = "Essa imagem potencialmente sexualiza crianças";
-    textContainer.style.color = "red";
-    textContainer.style.fontWeight = "bold";
-    textContainer.style.textAlign = "center";
-    textContainer.style.marginTop = "10px";
-    textContainer.style.fontSize = "1.2em";
-    textContainer.style.backgroundColor = "rgba(86, 86, 86, 0.5)";
-    textContainer.style.padding = "5px 10px";
-    textContainer.style.borderRadius = "5px";
-
+    const alertText = document.createElement("div");
+    alertText.className = "censor-text";
+    alertText.textContent = "Essa imagem potencialmente sexualiza crianças";
     // Monta a hierarquia
     alertContainer.appendChild(warningImage);
-    alertContainer.appendChild(textContainer);
+    alertContainer.appendChild(alertText);
     parent.appendChild(alertContainer);
   };
 
@@ -298,51 +251,27 @@
 
     // Cria container do alerta
     const alertContainer = document.createElement("div");
-    alertContainer.style.position = "absolute";
-    alertContainer.style.top = "0";
-    alertContainer.style.left = "0";
-    alertContainer.style.width = "100%";
-    alertContainer.style.height = "100%";
-    alertContainer.style.display = "flex";
-    alertContainer.style.flexDirection = "column";
-    alertContainer.style.justifyContent = "center";
-    alertContainer.style.alignItems = "center";
-    alertContainer.style.pointerEvents = "none";
-
+    alertContainer.className = "error-container";
     // Símbolo
     const warningImage = document.createElement("img");
     warningImage.src = chrome.runtime.getURL("images/error.svg");
-    warningImage.style.width = "20%";
-    warningImage.style.height = "auto";
-    warningImage.style.filter = "drop-shadow(0 0 10px yellow)";
+    warningImage.className = "error-image";
     // Texto
-    const textContainer = document.createElement("div");
-    textContainer.textContent = "Erro ao analisar imagem";
-    textContainer.style.color = "yellow";
-    textContainer.style.fontWeight = "bold";
-    textContainer.style.textAlign = "center";
-    textContainer.style.marginTop = "10px";
-    textContainer.style.fontSize = "1.2em";
-    textContainer.style.backgroundColor = "rgba(86, 86, 86, 0.5)";
-    textContainer.style.padding = "5px 10px";
-    textContainer.style.borderRadius = "5px";
-
+    const alertText = document.createElement("div");
+    alertText.className = "error-text";
+    alertText.textContent = "Erro ao analisar imagem";
     // Monta a hierarquia
     alertContainer.appendChild(warningImage);
-    alertContainer.appendChild(textContainer);
+    alertContainer.appendChild(alertText);
     parent.appendChild(alertContainer);
   };
 
   const showChecked = (element, location) => {
-    // show the checkmark front end if the image has been considered safe
-
     const parent = element.parentElement;
     if (!parent) return; // Sai se não houver elemento pai
 
     // Verifica se a caixa já foi adicionada para evitar duplicatas
-    if (parent.querySelector(".checked-box")) {
-      return;
-    }
+    if (parent.querySelector(".checked-box")) return;
 
     // Garante que o pai da imagem seja relativo para o posicionamento funcionar
     if (getComputedStyle(parent).position === "static") {
@@ -352,36 +281,16 @@
     // Cria o container principal da caixa
     const checkContainer = document.createElement("div");
     checkContainer.className = "checked-box"; // Adiciona uma classe para evitar duplicatas
-    checkContainer.style.position = "absolute";
-    checkContainer.style.top = "10px";
-    checkContainer.style.right = "10px";
-    checkContainer.style.backgroundColor = "gray";
-    checkContainer.style.opacity = "80%";
-    checkContainer.style.color = "white";
-    checkContainer.style.padding = "5px 8px";
-    checkContainer.style.borderRadius = "5px";
-    checkContainer.style.fontSize = "12px";
-    checkContainer.style.pointerEvents = "none";
-
-    // Usa Flexbox para alinhar texto e imagem
-    checkContainer.style.display = "flex";
-    checkContainer.style.alignItems = "center";
-
     // Cria o texto
     const textSpan = document.createElement("span");
     textSpan.textContent = "Imagem sem identificação de crianças sexualizadas";
-
     // Cria o símbolo
     const checkImage = document.createElement("img");
     checkImage.src = chrome.runtime.getURL("images/checkmark.png"); // Use o nome correto do seu arquivo!
-    checkImage.style.height = "1em"; // Faz a altura da imagem ser igual à altura da fonte
-    checkImage.style.width = "auto";
-    checkImage.style.marginRight = "5px"; // Espaçamento entre o texto e o símbolo
-
+    checkImage.className = "checkmark-image";
     // Monta a caixa
     checkContainer.appendChild(checkImage);
     checkContainer.appendChild(textSpan);
-
     // Adiciona a caixa ao pai da imagem original
     parent.appendChild(checkContainer);
   };
