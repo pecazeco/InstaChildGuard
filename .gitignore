@@ -2,6 +2,7 @@ ignore/
 .vscode/
 code/node_modules/
 code/tests/img_tests/
+code/config.js
 tcc/
 *.aux
 *.bbl

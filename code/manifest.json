@@ -16,14 +16,20 @@
         "images/warning-sign.png",
         "images/checkmark.png",
         "images/loading.gif",
-        "images/error.svg"
+        "images/error.svg",
+        "config.js"
       ],
       "matches": ["*://*.instagram.com/*"]
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "permissions": ["tabs"],
-  "host_permissions": ["*://*.cdninstagram.com/*", "*://*.googleapis.com/*"]
+  "host_permissions": [
+    "*://*.cdninstagram.com/*",
+    "*://*.googleapis.com/*",
+    "https://api.groq.com/*"
+  ]
 }

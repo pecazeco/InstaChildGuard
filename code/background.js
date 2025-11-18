@@ -1,4 +1,28 @@
+// 1. IMPORTAÇÃO DO ARQUIVO DE CONFIGURAÇÃO SECRETO
+import { API_CONFIG } from "./config.js";
+
+if (!API_CONFIG) {
+  throw new Error("Arquivo config.js não foi encontrado ou está inválido.");
+} else if (
+  !API_CONFIG.GEMINI_API_KEY ||
+  !API_CONFIG.GROQ_API_KEY ||
+  !API_CONFIG.SYSTEM_PROMPT ||
+  !API_CONFIG.AI_PROVIDER
+) {
+  throw new Error("Configurações de API estão faltando no config.js.");
+} else {
+  console.log("Rodando com o provedor :", API_CONFIG.AI_PROVIDER);
+}
+
 console.log("background.js: Service Worker iniciado.");
+
+// --- CONFIGURAÇÕES E CHAVES ---
+const GEMINI_API_KEY = API_CONFIG.GEMINI_API_KEY;
+const GROQ_API_KEY = API_CONFIG.GROQ_API_KEY;
+const AI_PROVIDER = API_CONFIG.AI_PROVIDER;
+const GROQ_AI_MODEL = API_CONFIG.GROQ_AI_MODEL;
+const SYSTEM_PROMPT = API_CONFIG.SYSTEM_PROMPT;
+const MODEL_TEMPERATURE = API_CONFIG.MODEL_TEMPERATURE;
 
 // --- LÓGICA DE NAVEGAÇÃO ---
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -24,10 +48,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // --- LÓGICA DA API ---
 
-// ⚠️ ATENÇÃO: Esta chave está publicamente visível no seu código.
-const API_KEY = "API_KEY_AQUI"; // substitua pela sua chave real
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-
 // --- OUVINTE DE MENSAGENS ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // 👇 Ouvindo pela mensagem correta do contentScript
@@ -35,7 +55,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("background.js: Recebido ANALYZE_IMAGE_URL para:", request.url);
 
     // Chama a função de análise, passando a URL
-    performImageAnalysis(request.url)
+    performImageAnalysis(request.url, AI_PROVIDER)
       .then((status) => {
         sendResponse({ status: status });
       })
@@ -50,35 +70,45 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 /**
- * Função principal que executa a análise da imagem.
- * Recebe a URL, converte, e chama a API.
+ * Função Orquestradora: Prepara a imagem e delega para a API escolhida.
  */
-async function performImageAnalysis(imageURL) {
+async function performImageAnalysis(imageURL, provider) {
   try {
-    // 1. Converte a URL da imagem para base64 (agora dentro do background)
+    // 1. Converte a URL da imagem para base64
     const imageParts = await resizeImageAndConvertToBase64(imageURL, 768, 0.8);
 
-    // 2. Monta o corpo (body) da requisição
+    // 2. Chama a função genérica de API
+    const responseText = await callAIProvider(
+      provider,
+      imageParts,
+      SYSTEM_PROMPT
+    );
+
+    console.log(`background.js: Resposta da API (${provider}):`, responseText);
+
+    // 3. Verifica resposta para decidir censura
+    const shouldCensor = responseText.trim().toLowerCase().startsWith("sim");
+    return shouldCensor ? 1 : 0;
+  } catch (error) {
+    console.error("background.js: Erro crítico na análise:", error);
+    return 2; // erro
+  }
+}
+
+// --- FUNÇÃO QUE GERENCIA A CHAMADA PARA CADA API ---
+async function callAIProvider(provider, imageParts, prompt) {
+  let url, options;
+
+  // 1. A partir do provedor, configura url e opções para o fetch
+  if (provider === "google") {
+    // --- CONFIGURAÇÃO GEMINI ---
+    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
     const body = {
       contents: [
         {
           parts: [
-            {
-              text: `
-                Responda essas duas perguntas separado por ponto e vírgula (;):
-                - "Sim", se a imagem contém mais de 1 pessoa, e "Não", caso contrário.
-                - Descreva em uma frase o que está contido nessa imagem
-                
-                Formatação: 
-                  "Sim/Não; descrição"
-                Exemplo: 
-                a) "Não; Uma criança pequena está brincando com um cachorro em um parque."
-                b) "Não; Uma paisagem com montanhas e um lago."
-                c) "Sim; Duas mulheres estão caminhando juntas em uma praia ao pôr do sol."
-
-                Observe que antes do ";" deve haver apenas "Sim" ou "Não", sem mais nada.
-              `,
-            },
+            { text: prompt },
             {
               inlineData: {
                 mime_type: imageParts.mimeType,
@@ -90,47 +120,70 @@ async function performImageAnalysis(imageURL) {
       ],
     };
 
-    // 3. Faz a chamada para a API do Gemini
-    const response = await fetch(API_URL, {
+    options = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    });
+    };
+  } else if (provider === "groq") {
+    // --- CONFIGURAÇÃO GROQ ---
+    url = "https://api.groq.com/openai/v1/chat/completions";
 
-    if (!response.ok) {
-      console.error(
-        "Erro na API do Google:",
-        response.status,
-        await response.text()
-      );
-      return 2; // erro
-    }
+    const body = {
+      model: GROQ_AI_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${imageParts.mimeType};base64,${imageParts.data}`,
+              },
+            },
+          ],
+        },
+      ],
+      temperature: MODEL_TEMPERATURE,
+      stream: false,
+    };
 
-    const data = await response.json();
+    options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+    };
+  } else {
+    throw new Error("Provedor de IA inválido: " + provider);
+  }
 
-    // 4. Extrai o texto da resposta
-    if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
-      console.error("Formato de resposta inesperado da API:", data);
-      return 2; // erro
-    }
-    const responseText = data.candidates[0].content.parts[0].text;
-    console.log("background.js: Resposta da API:", responseText);
+  // 2. Executa fetch
+  const response = await fetch(url, options);
 
-    // 5. Verifica resposta para decidir censura
-    const shouldCensor = responseText.trim().toLowerCase().startsWith("sim");
-    return shouldCensor ? 1 : 0; // 1 -> censurar; 0 -> ok
-  } catch (error) {
-    console.error("background.js: Erro ao processar a imagem:", error);
-    return 2; // 2 -> erro
+  if (!response.ok) {
+    throw new Error(
+      `Erro na API ${provider}: ${response.status} - ${await response.text()}`
+    );
+  }
+
+  // 3. A partir da resposta em json, extrai o texto conforme o provedor
+  const data = await response.json();
+  if (provider === "google") {
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text)
+      throw new Error("Resposta inválida Gemini");
+    return data.candidates[0].content.parts[0].text;
+  } else if (provider === "groq") {
+    if (!data.choices?.[0]?.message?.content)
+      throw new Error("Resposta inválida Groq");
+    return data.choices[0].message.content;
   }
 }
 
-// --- FUNÇÃO DE AJUDA PARA IMAGEM (VERSÃO DO SERVICE WORKER) ---
-
-/**
- * Versão da sua função que funciona no Service Worker.
- * Usa fetch, createImageBitmap e OffscreenCanvas.
- */
+// --- FUNÇÃO DE AJUDA PARA IMAGEM (OFFSCREENCANVAS) ---
 const resizeImageAndConvertToBase64 = (
   imageUrl,
   maxWidth = 768,
@@ -138,7 +191,7 @@ const resizeImageAndConvertToBase64 = (
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // 1. Busca a imagem (Isto só funciona por causa das 'host_permissions' no manifest)
+      // 1. Busca a imagem
       const response = await fetch(imageUrl);
       if (!response.ok) {
         throw new Error(`Falha ao buscar imagem: ${response.statusText}`);
@@ -153,7 +206,7 @@ const resizeImageAndConvertToBase64 = (
       const newWidth = maxWidth;
       const newHeight = imageBitmap.height * scale;
 
-      // 4. Usa OffscreenCanvas (próprio para workers)
+      // 4. Usa OffscreenCanvas
       const canvas = new OffscreenCanvas(newWidth, newHeight);
       const ctx = canvas.getContext("2d");
 
@@ -180,12 +233,7 @@ const resizeImageAndConvertToBase64 = (
       reader.readAsDataURL(resizedBlob);
     } catch (err) {
       // Se falhar aqui (ex: "could not be decoded"), é um problema de fetch.
-      reject(
-        new Error(
-          "Não foi possível carregar ou processar a imagem. Erro: " +
-            err.message
-        )
-      );
+      reject(new Error("Erro processando imagem: " + err.message));
     }
   });
 };
