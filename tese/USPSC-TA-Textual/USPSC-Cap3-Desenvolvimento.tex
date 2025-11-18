@@ -5,7 +5,7 @@
 
 No decorrer dessa seção serão definidas as ferramentas utilizadas para implementação do projeto em si e dos testes realizados.
 
-\subsection{Manifest V3}
+\subsection{Manifest V3} \label{sec:manifest_v3}
 Extensões de navegador são pequenos módulos de \textit{software} que personalizam um navegador da web. 
 Os navegadores normalmente permitem uma variedade de extensões, incluindo modificações na interface do usuário, gerenciamento de \textit{cookies}, bloqueio de anúncios e scripts e estilos personalizados de páginas da web.
 
@@ -89,17 +89,331 @@ e somente as imagens. Não são avaliados os ``stories'' ou vídeos, porém, com
 abranger esses casos seria uma adaptação de código, pois se o algoritmo funciona bem para a as imagens do feed, 
 é natural também funcionar para os stories ou vídeos. 
 Além disso, o código foi estruturado deixando aberturas para ser adaptado à outras abas do Instagram (reels, stories, explore), 
-o que será explicado na \autoref{sec:backend}.
+o que será explicado na \autoref{sec:content_script}.
 
-A explicação do funcionamento dos códigos desenvolvidos será dividida em três partes:
-o \textit{backend} (onde a lógica do código e requisições acontecem), 
-o \textit{frontend} (que se encarrega de montar o visual para o usuário),
-e os scripts de teste utilizados para validar o funcionamento do \textit{backend}.
+A explicação do funcionamento dos códigos desenvolvidos será dividida em quatro partes:
+\textit{content script}, \textit{background service worker}, \textit{frontend}, e os scripts de teste utilizados para validar o funcionamento do \textit{backend}.
 
-Vale enfatizar que, como já disponibilizado na \autoref{sec:escopo_do_projeto}, todo o código-fonte completo do projeto está disponível em um repositório público no GitHub.
+Por conta das limitações de privilégio explicada na \autoref{sec:manifest_v3}, o backend é dividido entre o \textit{content script} e o \textit{background service worker}. 
+Já o frontend tem seus estilos definidos em um arquivo CSS (\autoref{cap:apendice_css}) e é injetado através do \textit{content script}, que insere código HTML na página do Instagram.
 
-\subsection{\textit{Backend}} \label{sec:backend}
+Os trechos de códigos dispostos nessa seção foram resumidos, prezando pela clareza e objetividade. 
+Mas vale enfatizar que, como já disponibilizado na \autoref{sec:escopo_do_projeto}, o código-fonte completo do projeto está disponível em um repositório público no GitHub.
+Partes omitidas aqui incluem variáveis de configuração, funções auxiliares e trechos intermediários do código, impressões de \texttt{console.log()} para depuração, tratamentos de erro e demais partes dispensáveis para o entendimento do funcionamento geral.
 
-\subsection{\textit{Frontend}}
+\subsection{\textit{Background service worker}} \label{sec:background}
+
+A primeira função do \texttt{background.js} é identificar quando a página atualizou e enviar uma mensagem para o content script contendo a localização atual (feed, stories, reels, explore, por exemplo) e solicitando que ele cheque quais as postagens que já estão na página. Essa função pode ser vista no \autoref{lst:background_onUpdated}.
+
+\begin{lstlisting}[ 
+		label={lst:background_onUpdated}, 
+		caption={Avisa quando a página atualizou}
+	]
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  console.log("background.js: Pagina atualizou.");
+
+  if (
+    changeInfo.status === "complete" &&
+    tab.url &&
+    tab.url.includes("https://www.instagram.com")
+  ) {
+    // estamos no instagram
+    let location = tab.url.split("instagram.com/")[1];
+    if (location) {
+      location = location.split("/")[0]; // pegar a primeira palavra
+    } else {
+      location = ""; // Estamos no feed principal
+    }
+    console.log("background.js: Enviando localização:", location);
+    chrome.tabs.sendMessage(tabId, location);
+  }
+});
+\end{lstlisting}
+
+Outro papel do background é receber as URLs das imagens que o content script identificou na página e fazer a chamada para a API de geração de texto, retornando a decisão de censura para o content script.
+O recebimento das URLs é feito pelo ouvinte de mensagens (\autoref{lst:background_onMessage}).
+
+\begin{lstlisting}[ 
+		label={lst:background_onMessage}, 
+		caption={Ouvinte de mensagens no background}
+	]
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "ANALYZE_IMAGE_URL") {
+    // Chama a função de análise, passando a URL
+    performImageAnalysis(request.url)
+      .then((status) => {
+        sendResponse({ status: status });
+      })
+      .catch((error) => {
+        console.error("background.js: Erro no performImageAnalysis:", error);
+        sendResponse({ status: 2 });
+      });
+
+    return true;
+  }
+});
+\end{lstlisting}
+
+A chamada à API é feita pelo background pois se a chave de API ficasse no content script, ela ficaria visível em texto puro para qualquer pessoa que inspecionasse o código da página, assim, a recomendação é deixar a chave no background, onde ela fica em um processo separado e isolado, longe dos olhos do usuário comum.
+A chamada é realizado pelo \texttt{performImageAnalysis()} (\autoref{lst:background_performImageAnalysis}), que aqui está resumido para entendimento geral.
+
+\begin{lstlisting}[ 
+		label={lst:background_performImageAnalysis}, 
+		caption={\texttt{performImageAnalysis()}}
+	]
+async function performImageAnalysis(imageURL) {
+  try {
+    // 1. Converte a URL da imagem para base64 redimensionada
+    const imageParts = await resizeImageAndConvertToBase64(imageURL, 768, 0.8);
+
+    // 2. Monta o corpo (body) da requisição
+    const body = {
+      contents: [
+        {
+          parts: [
+            {
+              text: "[Aqui fica o prompt]",
+            },
+            {
+              inlineData: {
+                mime_type: imageParts.mimeType,
+                data: imageParts.data,
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    // 3. Faz a chamada para a API do Gemini
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    /* 4. ... etapas intermediárias ... */
+
+    // 5. Verifica resposta para decidir censura
+    const shouldCensor = responseText.trim().toLowerCase().startsWith("sim");
+    return shouldCensor ? 1 : 0; // 1 -> censurar; 0 -> ok
+  } catch (error) {
+    console.error("background.js: Erro ao processar a imagem:", error);
+    return 2; // 2 -> erro
+  }
+}
+\end{lstlisting}
+
+O background analisa a imagem e retorna para o content script 1 se a decisão for censurar, 0 se não, e 2 em caso de erro.
+Vale destacar que, a fim de economizar tokens, a imagem é redimensionada para uma largura máxima de 768 pixels e convertida para base64 com qualidade de 80\% (\texttt{resizeImageAndConvertToBase64()}) antes de ser enviada para a API.
+
+\subsection{\textit{Content script}} \label{sec:content_script}
+
+Assim que o background avisa que a página atualizou, o content script ouve a mensagem (\autoref{lst:content_onMessage}) e inicia a verificação das postagens presentes na página.
+
+\begin{lstlisting}[ 
+		label={lst:content_onMessage}, 
+		caption={Ouve que a página atualizou e checa as primeiras postagens}
+	]
+chrome.runtime.onMessage.addListener((message) => {
+  location = message;
+  checkEachPost(document, location);
+});
+\end{lstlisting}
+
+A função \texttt{checkEachPost()} (\autoref{lst:checkEachPost}) procura os elementos HTML correspondentes às postagens dentro de um nó fornecido. 
+Quando ele recebe a informação que a página atualizou, essa função busca pelos elementos na página inteira (nó \texttt{document}), e chama a função \texttt{checkElement()} para cada uma deles.
+
+Por observação do DOM do Instagram, foi possível identificar que as postagens do feed atualmente podem ser rastreadas pelos elementos da tag \texttt{img} que possuem o atributo \texttt{alt} iniciado por ``Photo by'' ou ``Photo shared by''. 
+É difícil encontrar uma forma mais robusta de identificar as postagens, pois o Instagram utiliza algum framework (como o React) que cria IDs e classes dinâmicas e aleatórias, sendo sequências de caracteres como ``\texttt{hcwsLGnMz092209zkAIok0llLz09aLAuU}'' que podem mudar a qualquer momento.
+
+\begin{lstlisting}[
+    label={lst:checkEachPost},
+    caption={Função que checa primeiras postagens da página}
+  ]
+const checkEachPost = (node, location) => {
+  switch (location) {
+    case "": // feed
+      // Pega os filhos desse nó que sao posts
+      let posts = [
+        ...node.querySelectorAll('img[alt^="Photo by"]'),
+        ...node.querySelectorAll('img[alt^="Photo shared by"]'),
+      ];
+      // checa cada post se deve censurar
+      posts.forEach((img) => checkElement(img, location));
+      break;
+
+    case "stories":
+      break;
+
+    case "reels":
+      break;
+
+    case "explore":
+      break;
+
+    default: // não sabemos onde estamos
+      break;
+  }
+};
+\end{lstlisting}
+
+A função de checar as postagens iniciais foi estruturada em um \texttt{switch} para facilitar a expansão para outras abas do Instagram, como stories, reels e explore, buscando uma certa flexibilidade no código.
+Como já dito, atualmente apenas o feed está implementado, mas as outras abas podem ser adicionadas futuramente.
+
+Dentro da função \texttt{checkElement()} (\autoref{lst:checkElement}), é verificado se o elemento já foi analisado anteriormente (para evitar análises repetidas), é esperada a imagem estar completamente carregada, e então a função \texttt{processImage()} é chamada para analisar a imagem da postagem. 
+Caso um erro de carregamento ocorra, a função \texttt{showError()} é chamada para exibir um aviso visual na postagem, o que vai ser explicado na \autoref{sec:frontend}.
+
+\begin{lstlisting}[
+  label = {lst:checkElement},
+  caption = {Função que checa se o elemento já foi analisado, espera o carregamento e chama a análise}
+]
+const checkElement = (img, location) => {
+  // Evita processar a mesma imagem múltiplas vezes
+  if (img.dataset.analysisState) {
+    return;
+  }
+
+  // Marca a imagem como "analisando" 
+  img.dataset.analysisState = "pending";
+  console.log("Observado:", img);
+
+  // 'complete' = o browser terminou de carregar
+  // 'currentSrc' = tem uma fonte de imagem válida
+  if (img.complete && img.currentSrc) {
+    console.log(
+      "Imagem já carregada, processando imediatamente:",
+      img.currentSrc
+    );
+    processImage(img, location); // Processa agora
+  } else {
+    const onLoad = () => {
+      processImage(img, location);
+      // Limpa os ouvintes
+      img.removeEventListener("load", onLoad);
+      img.removeEventListener("error", onError);
+    };
+
+    const onError = () => {
+      console.error(
+        "Erro ao carregar imagem no DOM (src pode estar inválido):",
+        img.src
+      );
+      img.dataset.analysisState = "error";
+      showError(img, location); // Mostra o erro visual
+      // Limpa os ouvintes
+      img.removeEventListener("load", onLoad);
+      img.removeEventListener("error", onError);
+    };
+
+    img.addEventListener("load", onLoad);
+    img.addEventListener("error", onError);
+  }
+};
+\end{lstlisting}
+
+A função \texttt{processImage()} (\autoref{lst:processImage}) envia a URL da imagem para a função responsável por chamar o background (\texttt{checkIfAdultization()}), que faz a análise e retorna a decisão de censura. 
+Ela também é responsável por chamar as funções que montam o frontend, 
+ativando o visual de carregamento enquanto a análise está em andamento,
+e, ao fim, o removendo e mostrando o resultado (censura, selo de verificação ou erro). 
+
+\begin{lstlisting}[
+  label={lst:processImage},
+  caption={Função resumida que envia a imagem para análise e monta o frontend}
+]
+const processImage = async (img, location) => {
+  /* ... etapas intermediárias ... */
+
+  showAnalysing(img, location); // Frontend de carregamento
+  const response = await checkIfAdultization(imageUrl);
+  removeAnalysing(img, location); // Remove frontend de carregamento
+  switch (response) { // Mostra o resultado
+    case 0:
+      showChecked(img, location);
+      break;
+    case 1:
+      showCensored(img, location);
+      break;
+    case 2:
+      showError(img, location);
+      break;
+    default:
+      break;
+  }
+
+  const elapsedTime = Date.now() - startTime;
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // Garante tempo mínimo de 7 segundos
+  if (elapsedTime < 7000) {
+    await delay(7000 - elapsedTime);
+    return;
+  }
+\end{lstlisting}
+
+A \texttt{processImage()} possui uma lógica que garante um tempo mínimo para cada análise, implementado a fim de não ultrapassar o limite de requisições por minuto. 
+Esse tempo foi ajustado dependendo do modelo testado, por exemplo, o limite de 10 RPM do Gemini 2.5 Flash pode ser respeitado com um tempo mínimo de 7 segundos por análise.
+
+A função \texttt{checkIfAdultization()} envia a mensagem para o background, que a ouve (\autoref{lst:background_onMessage}), faz a análise e retorna a decisão de censura, como já explicado na \autoref{sec:background}.
+
+Além de checar as postagens dispostas inicialmente, o content script também observa mudanças no DOM da página, percebendo quando novos nós são carregados ao rolar a página para baixo.
+Quando ele identifica esses novos elementos, chama a função \texttt{checkEachPost()} para verificar se há novas postagens a serem analisadas (\autoref{lst:mutationObserver}).
+Nesse momento, ao invés de passar o nó \texttt{document} para a função \texttt{checkEachPost()} (como foi feito em \autoref{lst:content_onMessage}), passa-se apenas os nós que foram adicionados, otimizando o processo.
+
+\begin{lstlisting}[
+  label={lst:mutationObserver},
+  caption={Observador de mutações que checa novos posts carregados}
+]
+const observer = new MutationObserver((mutations) => {
+  // itera sob cada mutação da pagina
+  mutations.forEach((mutation) => {
+    // se a mutação é sobre a lista de filhos da pagina e o numero é positivo (foram adicionados nós)
+    if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+      // itera sobre cada nó adicionado
+      mutation.addedNodes.forEach((node) => {
+        // Verifica se o nó adicionado é um elemento HTML
+        if (node.nodeType === 1) {
+          checkEachPost(node, location); // checa os posts dentro desse nó
+        }
+      });
+    }
+  });
+});
+\end{lstlisting}
+
+\subsection{Frontend} \label{sec:frontend}
+
+As funções do content script que injetam o frontend na página do Instagram são \texttt{showAnalysing()} (\autoref{lst:showAnalysing}), \texttt{removeAnalysing()}, \texttt{showCensored()}, \texttt{showChecked()} e \texttt{showError()}.
+Como todas essas funções têm uma lógica relativamente parecida, utiliza-se aqui a \texttt{showAnalysing()} como exemplo, que é responsável por inserir o visual de carregamento na postagem que está sendo analisada.
+
+\begin{lstlisting}[
+  label={lst:showAnalysing},
+  caption={Função que insere o frontend de carregamento na postagem}
+]
+const showAnalysing = (element, location) => {
+  /* ... etapas intermediárias ... */
+
+  // Aplica um blur inicial
+  element.style.filter = "blur(10px)";
+  // Cria o container principal para o loading
+  const analysingContainer = document.createElement("div");
+  analysingContainer.className = "analysing-container";
+  // Cria o GIF de loading
+  const loadingGif = document.createElement("img");
+  loadingGif.src = chrome.runtime.getURL("images/loading.gif");
+  loadingGif.className = "analysing-gif";
+  // Cria o texto "Analisando..."
+  const analysingText = document.createElement("div");
+  analysingText.textContent = "Analisando conteúdo...";
+  analysingText.className = "analysing-text";
+  // Monta o visual de análise
+  analysingContainer.appendChild(loadingGif);
+  analysingContainer.appendChild(analysingText);
+  // Adiciona tudo à página
+  parent.appendChild(analysingContainer);
+};
+\end{lstlisting}
+
+As classes CSS utilizadas para estilizar o frontend estão definidas no arquivo \texttt{styles.css} (\autoref{cap:apendice_css}).
 
 \subsection{Script para testes} \label{sec:script_testes}
+
+explicar script python
