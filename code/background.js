@@ -4,7 +4,7 @@ import { API_CONFIG } from "./config.js";
 if (!API_CONFIG) {
   throw new Error("Arquivo config.js não foi encontrado ou está inválido.");
 } else if (
-  !API_CONFIG.GEMINI_API_KEY ||
+  !API_CONFIG.GOOGLE_API_KEY ||
   !API_CONFIG.GROQ_API_KEY ||
   !API_CONFIG.SYSTEM_PROMPT ||
   !API_CONFIG.AI_PROVIDER
@@ -17,7 +17,7 @@ if (!API_CONFIG) {
 console.log("background.js: Service Worker iniciado.");
 
 // --- CONFIGURAÇÕES E CHAVES ---
-const GEMINI_API_KEY = API_CONFIG.GEMINI_API_KEY;
+const GOOGLE_API_KEY = API_CONFIG.GOOGLE_API_KEY;
 const GROQ_API_KEY = API_CONFIG.GROQ_API_KEY;
 const AI_PROVIDER = API_CONFIG.AI_PROVIDER;
 const GROQ_AI_MODEL = API_CONFIG.GROQ_AI_MODEL;
@@ -102,7 +102,7 @@ async function callAIProvider(provider, imageParts, prompt) {
   // 1. A partir do provedor, configura url e opções para o fetch
   if (provider === "google") {
     // --- CONFIGURAÇÃO GEMINI ---
-    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
 
     const body = {
       contents: [
