@@ -39,7 +39,7 @@ Toda essa aparente complicação a mais garante a segurança da extensão \cite{
 	\end{center}	
 \end{figure}
 
-\subsection{Uso das APIs}
+\subsection{Uso das APIs} \label{sec:metodologia_uso_apis}
 
 Um exemplo de chamada das APIs REST utilizadas por meio de cURL pode ser visto no \autoref{cap:apendice_doc_apis}.
 As chamadas foram adaptadas para o uso em JavaScript, utilizando a função \texttt{fetch()}, que é nativa da linguagem e permite fazer requisições HTTP assíncronas.
@@ -154,58 +154,43 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 \end{lstlisting}
 
-A chamada à API é feita pelo background pois se a chave de API ficasse no content script, ela ficaria visível em texto puro para qualquer pessoa que inspecionasse o código da página, assim, a recomendação é deixar a chave no background, onde ela fica em um processo separado e isolado, longe dos olhos do usuário comum.
-A chamada é realizado pelo \texttt{performImageAnalysis()} (\autoref{lst:background_performImageAnalysis}), que aqui está resumido para entendimento geral.
+A chamada à API é feita pelo background pois se a chave de API ficasse no content script, ela ficaria visível em texto puro para qualquer pessoa que inspecionasse o código da página, assim, a recomendação importar a chave no background, onde ela fica em um processo separado e isolado, longe dos olhos do usuário comum.
 
 \begin{lstlisting}[ 
 		label={lst:background_performImageAnalysis}, 
 		caption={\texttt{performImageAnalysis()}}
 	]
-async function performImageAnalysis(imageURL) {
+async function performImageAnalysis(imageURL, provider) {
   try {
-    // 1. Converte a URL da imagem para base64 redimensionada
+    // 1. Converte a URL da imagem para base64
     const imageParts = await resizeImageAndConvertToBase64(imageURL, 768, 0.8);
 
-    // 2. Monta o corpo (body) da requisição
-    const body = {
-      contents: [
-        {
-          parts: [
-            {
-              text: "[Aqui fica o prompt]",
-            },
-            {
-              inlineData: {
-                mime_type: imageParts.mimeType,
-                data: imageParts.data,
-              },
-            },
-          ],
-        },
-      ],
-    };
+    // 2. Chama a função genérica de API
+    const responseText = await callAIProvider(
+      provider, // "google" ou "groq"
+      imageParts, // base64 da imagem
+      SYSTEM_PROMPT // prompt de entrada do modelo
+    );
 
-    // 3. Faz a chamada para a API do Gemini
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    /* 4. ... etapas intermediárias ... */
-
-    // 5. Verifica resposta para decidir censura
+    // 3. Verifica resposta para decidir censura
     const shouldCensor = responseText.trim().toLowerCase().startsWith("sim");
-    return shouldCensor ? 1 : 0; // 1 -> censurar; 0 -> ok
+    return shouldCensor ? 1 : 0;
   } catch (error) {
-    console.error("background.js: Erro ao processar a imagem:", error);
-    return 2; // 2 -> erro
+    console.error("background.js: Erro crítico na análise:", error);
+    return 2; // erro
   }
 }
 \end{lstlisting}
 
-O background analisa a imagem e retorna para o content script 1 se a decisão for censurar, 0 se não, e 2 em caso de erro.
-Vale destacar que, a fim de economizar tokens, a imagem é redimensionada para uma largura máxima de 768 pixels e convertida para base64 com qualidade de 80\% (\texttt{resizeImageAndConvertToBase64()}) antes de ser enviada para a API.
+O  \texttt{performImageAnalysis()} (resumido em \autoref{lst:background_performImageAnalysis}) realiza 3 etapas: 
+redimensiona a imagem e a converte para base64; 
+chama uma função genérica que faz a requisição para a API escolhida (Google ou Groq);
+faz uma lógica simples a partir da resposta para decidir se a imagem deve ser censurada ou não, retornando 0 (não censurar), 1 (censurar) ou 2 (erro) para o content script.
+
+O redimensionamento se dá a fim de economizar tokens, limitando uma largura máxima de 768 pixels e convertida para base64 com qualidade de 80\% antes de ser enviada para a API.
+
+A função \texttt{callAIProvider()} monta a requisição para a API escolhida da maneira correta, considerando os detalhes de cada uma, como o endpoint, o formato do corpo da requisição e o cabeçalho de autenticação, considerando a documentação citada na \autoref{sec:metodologia_uso_apis}.
+Além disso, ela também trata a resposta, padronizando o retorno para o formato de texto puro, que é utilizado na etapa seguinte de lógica de decisão de censura.
 
 \subsection{\textit{Content script}} \label{sec:content_script}
 
@@ -416,4 +401,65 @@ As classes CSS utilizadas para estilizar o frontend estão definidas no arquivo 
 
 \subsection{Script para testes} \label{sec:script_testes}
 
-explicar script python
+O script Python desenvolvido para realizar os testes faz as chamadas com base na documentação oficial de ambas as APIs, conforme mostrado no \autoref{cap:apendice_doc_apis}.
+
+O script lê 3 vezes todas as imagens de uma pasta específica, faz o mesmo redimensionamento e otimização de imagem que o content script faz,
+e então faz a chamada para a API e modelo escolhidos.
+Após receber a resposta, o script processa o texto retornado e 
+guarda uma lista de informações do resultado. Ao final, as informações sobre todas as imagens são salvas em um arquivo CSV para análise posterior.
+
+O trecho de código responsável por fazer a chamada para a API e processar a resposta pode ser visto no \autoref{lst:chamada_resposta_testes}. 
+Observa-se que a chamada para cada API é feita em funções auxiliares separadas, mas o processamento da resposta é igual para ambas.
+
+\begin{lstlisting}[
+  language=Python,
+  caption={Chamada e processamento da resposta no script de testes},
+  label={lst:chamada_resposta_testes}
+]
+# --- CHAMADA GOOGLE GEMINI ---
+if AI_PROVIDER == "google":
+    api_response = callGoogleAPI(optimized_img)
+    response_time = time.time() - start_time_per_image
+
+# --- CHAMADA GROQ ---
+elif AI_PROVIDER == "groq":
+    api_response = callGroqAPI(optimized_img)
+    response_time = time.time() - start_time_per_image
+
+# --- PROCESSAMENTO DA RESPOSTA (IGUAL PARA AMBOS) ---
+try:
+    parts = api_response.split(';', 1)
+    contem_pessoa = parts[0].strip()
+    justificativa = parts[1].strip() if len(parts) > 1 else "Sem justificativa"
+    gabarito = 'Sim' if filename.lower().startswith('sim') else 'Não'
+    
+    results_list.append({
+        'NomeDoArquivo': filename,
+        'Gabarito': gabarito,
+        'ContemSexualizacao': contem_pessoa,
+        'Descricao': justificativa,
+        'RespostaBruta': api_response,
+        'ResponseTime(s)': f"{response_time:.2f}",      
+    })
+\end{lstlisting}
+
+O script também leva em consideração o limite de requisições por minuto de cada modelo testado (\autoref{lst:espera_rpm_testes}),
+forçando esperas entre as chamadas para não ultrapassar o limite.
+Como o limite do Gemini 2.5 Flash é de 10 RPM, o script garante um tempo seguro mínimo de 7 segundos entre cada requisição.
+Já os modelos Llama oferecidos pela Groq possuem limite de 30 RPM, então, para ser conservador, o script garante pelo menos 2.5 segundos entre cada requisição.
+
+\begin{lstlisting}[
+  language=Python,
+  caption={Espera para respeitar limite de requisições por minuto},
+  label={lst:espera_rpm_testes}
+]
+if AI_PROVIDER == 'google':
+    if elapsed_time < 7: 
+        time.sleep(7 - elapsed_time)
+elif AI_PROVIDER == 'groq':
+    if elapsed_time < 2.5:
+        time.sleep(2.5 - elapsed_time)
+\end{lstlisting}
+
+O código lê todas as imagens três vezes para analisarmos a consistência dos resultados.
+Se o modelo retornar resultados diferentes para a mesma imagem em execuções distintas, isso indica que o prompt ainda não está robusto o suficiente.
