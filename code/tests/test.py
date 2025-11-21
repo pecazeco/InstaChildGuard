@@ -7,6 +7,7 @@ from PIL import Image
 from io import BytesIO
 import time
 import base64
+from tqdm import tqdm
 
 start_time = time.time()
 
@@ -17,14 +18,13 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 IMAGE_FOLDER = r'code\tests\img_tests' 
-OUTPUT_CSV_PATH = r'code\tests\output'  
+OUTPUT_CSV_PATH = r'c:\Users\Pedro Azevedo\OneDrive\Graduacao\output_tests'  
 
 # --- Escolha do Provedor ---
 # AI_PROVIDER = "google" 
 AI_PROVIDER = "groq"
 
 # --- Definição do Modelo ---
-# Altere o modelo conforme o provider escolhido
 if AI_PROVIDER == "google":
     MODEL_NAME = "gemini-2.5-flash"
 elif AI_PROVIDER == "groq":
@@ -97,12 +97,12 @@ def process_images_in_folder():
     
     results_list = []
 
-    for image_path in image_files:
+    for image_path in tqdm(image_files, desc="Processando imagens"):
         start_time_per_image = time.time()
         filename = os.path.basename(image_path)
         
         try:
-            print(f"Analisando {filename}...")
+            tqdm.write(f"Analisando {filename}...")
             
             # Abre e Otimiza
             img = Image.open(image_path)
@@ -140,7 +140,7 @@ def process_images_in_folder():
                 })
                 
             except Exception as e:
-                print(f"[Aviso] Formato inesperado: {api_response}")
+                tqdm.write(f"[Aviso] Formato inesperado: {api_response}")
                 results_list.append({
                     'NomeDoArquivo': filename,
                     'Gabarito': 'Sim' if filename.lower().startswith('sim') else 'Não',
@@ -151,7 +151,7 @@ def process_images_in_folder():
                 })
 
         except Exception as e:
-            print(f" [Erro] Falha ao processar {filename}: {e}")
+            tqdm.write(f" [Erro] Falha ao processar {filename}: {e}")
             results_list.append({
                 'NomeDoArquivo': filename,
                 'Gabarito': 'Sim' if filename.lower().startswith('sim') else 'Não',
@@ -163,7 +163,7 @@ def process_images_in_folder():
         
         # Delay inteligente
         elapsed_time = time.time() - start_time_per_image
-        print(f"  Tempo: {elapsed_time:.2f}s")
+        tqdm.write(f"  Tempo: {elapsed_time:.2f}s")
         
         # Limite de taxa simples (ajuste conforme necessário para Groq vs Google)
         if AI_PROVIDER == 'google':
@@ -179,7 +179,7 @@ def process_images_in_folder():
         saving_time = time.strftime("%m%d%H%M")
         model_name_sanitized = MODEL_NAME.removeprefix("meta-llama/")
         output_filename = f'results_{model_name_sanitized}_{saving_time}.csv'
-        df.to_csv(OUTPUT_CSV_PATH + '\\' + output_filename, index=False, encoding='utf-8')
+        df.to_csv(OUTPUT_CSV_PATH + '\\' + output_filename, index=False, encoding='utf-8', sep=';')
         print(f"Arquivo salvo: '{output_filename}'.")
     else:
         print("Nenhum resultado gerado.")
