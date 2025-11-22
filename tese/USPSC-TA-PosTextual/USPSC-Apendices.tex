@@ -18,11 +18,11 @@ Fonte: elaborado pelo autor
 
 \chapter{Documentação de chamada das APIs} \label{cap:apendice_doc_apis}
 
-Pela documentação oficial da API do Google uma chamada pode ser feita como exemplificada pelo \autoref{lst:gemini_api_doc}.
+Pela documentação oficial das APIs do Google e do Groq, as chamadas por cURL podem ser feitas como exemplificado no \autoref{lst:gemini_curl_doc} e \ref{lst:groq_curl_doc}.
 
 \begin{lstlisting}[
 		language=sh, 
-		label={lst:gemini_api_doc}, 
+		label={lst:gemini_curl_doc}, 
 		caption={Exemplo de envio de imagem à API do Gemini 2.5 Flash}
 	]
 curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
@@ -45,11 +45,9 @@ curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:g
 \end{lstlisting}
 Fonte: \url{https://ai.google.dev/gemini-api/docs/image-understanding?hl=pt-br#rest}
 
-Já pela documentação da Groq, a chamada pode ser feita conforme o \autoref{lst:groq_api_doc}.
-
 \begin{lstlisting}[
 		language=sh, 
-		label={lst:groq_api_doc}, 
+		label={lst:groq_curl_doc}, 
 		caption={Exemplo de envio de imagem à API do Groq}
 	]
 curl "https://api.groq.com/openai/v1/chat/completions" \
@@ -81,6 +79,74 @@ curl "https://api.groq.com/openai/v1/chat/completions" \
          "stream": false,
          "stop": null
        }'
+\end{lstlisting}
+Fonte: \url{https://console.groq.com/docs/vision}
+
+Já as chamadas usando Python podem ser observadas no \autoref{lst:doc_gemini_python} e \ref{lst:doc_groq_python} 
+
+\begin{lstlisting}[
+  language=python,
+  label={lst:doc_gemini_python},
+  caption={Chamada à API do Gemini 2.5 Flash usando Python}
+]
+from google import genai
+from google.genai import types
+
+with open('path/to/small-sample.jpg', 'rb') as f:
+    image_bytes = f.read()
+
+client = genai.Client()
+response = client.models.generate_content(
+  model='gemini-2.5-flash',
+  contents=[
+    types.Part.from_bytes(
+      data=image_bytes,
+      mime_type='image/jpeg',
+    ),
+    'Caption this image.'
+  ]
+)
+
+print(response.text)
+\end{lstlisting}
+Fonte: \url{https://ai.google.dev/gemini-api/docs/image-understanding?hl=pt-br#rest}
+
+\begin{lstlisting}[
+  language=python,
+  label={lst:doc_groq_python},
+  caption={Chamada à API do Groq usando Python}
+]
+from groq import Groq
+import base64
+import os
+
+# Function to encode the image
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+
+image_path = "sf.jpg"
+base64_image = encode_image(image_path)
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What's in this image?"},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}",
+                    },
+                },
+            ],
+        }
+    ],
+    model="meta-llama/llama-4-scout-17b-16e-instruct",
+)
+
+print(chat_completion.choices[0].message.content)
 \end{lstlisting}
 Fonte: \url{https://console.groq.com/docs/vision}
 
