@@ -2,7 +2,7 @@ import os
 import glob
 import pandas as pd
 import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold, FinishReason
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from groq import Groq  # Import do cliente Groq
 from PIL import Image
 from io import BytesIO
@@ -35,27 +35,28 @@ READ_TIMES = 2
 
 # --- Fim da Configuração ---
 
+SYSTEM_PROMPT = """
+# ROLE
+Você é um Agente de Segurança AI com critérios de filtragem EXTREMAMENTE RÍGIDOS (Zero Tolerance). Sua função é sinalizar qualquer imagem que contenha exposição corporal infantil, independentemente da intenção ou contexto.
+
+# CRITÉRIOS DE CLASSIFICAÇÃO (ESTRITOS)
+Responda "Sim" se a imagem contiver QUALQUER um dos seguintes elementos envolvendo pessoas menores de 18 anos:
+1. Trajes de Banho e Roupa Íntima: Qualquer criança vestindo biquíni, sunga, maiô, lingerie ou cueca.
+   - NOTA CRÍTICA: O contexto NÃO importa. Crianças na praia/piscina em trajes de banho DEVEM ser classificadas como "Sim".
+2. Exposição de Pele: Torso nu (em qualquer gênero), nádegas ou genitais visíveis ou marcados.
+3. Poses: Qualquer pose que enfatize o corpo, mesmo que vestida.
+
+Responda "Não" APENAS se:
+- A criança estiver totalmente vestida com roupas casuais/formais (camisetas, calças, vestidos não reveladores).
+- Não houver pessoas menores de 18 anos.
+
+# FORMATO DE RESPOSTA
+[Sim/Não]; [Justificativa técnica curta focada no elemento visual detectado]
+"""
+
 PROMPT_TEXT = """
-Responda essas duas perguntas separado por ponto e vírgula (;):
-- "Sim", se a imagem contém casos de sexualização infantil, e "Não", caso contrário.
-- Justifique a sua resposta em poucas palavras.
-
-Formatação: 
-    "Sim/Não; justificativa"
-Definição de sexualização infantil é definida como qualquer representação que retrate crianças de maneira sexualizada, destacando-se:
-    - Crianças em poses sugestivas, que buscam exibir alguma parte do corpo
-    - Crianças com roupas curtas, justas, transparentes ou com decote excessivo, mostrando parte dos seios, nádegas ou genitais
-    - Contextos que impliquem conotação sexual envolvendo menores de 18 anos, como fetiches.
-    - Crianças aqui se referem a qualquer pessoa com aparência de idade inferior a 18 anos.
-Exemplo de respostas: 
-a) "Sim; Foto contém criança de biquine e em posição altamente sugestiva."
-b) "Não; Uma paisagem com montanhas e um lago."
-c) "Não; Criança brincando em um parque com roupas apropriadas para a idade."
-d) "Sim; Pessoa aparentando ser menor de idade em trajes reveladores."
-
-Observações: 
-- Antes do ";" deve haver apenas "Sim" ou "Não", sem mais nada.
-- Se houver dúvida sobre a idade, considere como criança.
+Analise a imagem fornecida com base nas suas diretrizes de sistema.
+Lembre-se: Responda apenas com 'Sim' ou 'Não' seguido de ponto e vírgula e a justificativa.
 """
 
 def process_images_in_folder(ai_provider, model_name):
@@ -256,6 +257,9 @@ def pil_to_base64(img: Image.Image) -> str:
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
 def callGoogleAPI(optimized_img: Image.Image, model_name: str) -> str:
+    FINISH_REASON_SAFETY = 3
+    FINISH_REASON_PROHIBITED = 8
+
     generation_config = { "temperature" : TEMPERATURE, }
     safety_settings = {
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
@@ -265,7 +269,10 @@ def callGoogleAPI(optimized_img: Image.Image, model_name: str) -> str:
     }
 
     genai.configure(api_key=GOOGLE_API_KEY)
-    model_google = genai.GenerativeModel(model_name)
+    model_google = genai.GenerativeModel(
+        model_name,
+        system_instruction=SYSTEM_PROMPT
+    )
 
     try:    
         response = model_google.generate_content(
@@ -284,11 +291,11 @@ def callGoogleAPI(optimized_img: Image.Image, model_name: str) -> str:
             candidate = response.candidates[0]
             
             # FinishReason 8 = PROHIBITED_CONTENT (CSAM, etc)
-            if candidate.finish_reason == FinishReason.PROHIBITED_CONTENT:
+            if candidate.finish_reason == FINISH_REASON_PROHIBITED:
                 return "Sim; Conteúdo Proibido detectado (FinishReason: PROHIBITED_CONTENT)."
             
             # FinishReason 3 = SAFETY (Violações de safety settings, mesmo com BLOCK_NONE em alguns casos hard-coded)
-            if candidate.finish_reason == FinishReason.SAFETY:
+            if candidate.finish_reason == FINISH_REASON_SAFETY:
                 return "Sim; Conteúdo Inseguro detectado (FinishReason: SAFETY)."
             
             # Se o finish_reason for outro (ex: STOP), tentamos pegar o texto.
@@ -319,10 +326,16 @@ def callGroqAPI(optimized_img: Image.Image, model_name: str) -> str:
     
     chat_completion = client_groq.chat.completions.create(
         messages=[
+            # 1. MENSAGEM DE SISTEMA (Vem primeiro)
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            },
+            # 2. MENSAGEM DO USUÁRIO (Vem depois)
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": PROMPT_TEXT},
+                    {"type": "text", "text": PROMPT_TEXT}, 
                     {
                         "type": "image_url",
                         "image_url": {
@@ -333,7 +346,7 @@ def callGroqAPI(optimized_img: Image.Image, model_name: str) -> str:
             }
         ],
         model=model_name,
-        temperature = TEMPERATURE
+        temperature=TEMPERATURE
     )
     return chat_completion.choices[0].message.content.strip()
 
