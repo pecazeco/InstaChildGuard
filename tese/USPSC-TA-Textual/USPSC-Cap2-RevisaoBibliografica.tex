@@ -106,7 +106,7 @@ foram comparadas as performance de várias LLMs com as de redes neurais de apren
 As redes neurais convolucionais foram pré-treinadas com milhões de imagens gerais e então feito um \textit{fine-tuning} com algumas centenas de imagens médicas.
 Ao final, de todos os modelos testados, o que se saiu melhor em todos os critérios foi o Gemini 1.5 Pro (\autoref{fig:than_tabela_comparacao}).
 
-\begin{quadro}[htb]
+\begin{table}[htb]
     \centering
     \caption{Comparação da performance dos modelos}
     \label{fig:than_tabela_comparacao}
@@ -122,7 +122,7 @@ Ao final, de todos os modelos testados, o que se saiu melhor em todos os critér
         \includegraphics[width=\linewidth]{USPSC-img/performance-multimodal.png}
     \end{subfigure} 
     \legend{Fonte: \cite{than2024}}
-\end{quadro}
+\end{table}
 
 No estudo citado, foi concluído que modelos multimodais podem performar até melhor que redes de aprendizado profundo na falta de dados suficientes de treinamento.
 O artigo também destaca a possibilidade de maior explicabilidade via dos multimodais, que indicam de maneira mais intuitiva como as decisões foram feitas.
@@ -187,20 +187,24 @@ Aqui, são oferecidos ainda mais opções que a Cerebra, incluindo alguns desenv
 No geral, os limites da Groq são bem mais restritivos que os da Cerebra, 
 porém aqui eles disponibilizam pela API REST acesso a dois modelos multimodais, os Llama 4 Scout e Llama 4 Maverick.
 
-\begin{quadro}[htb]
-    \centering
-    \caption{Limites de Uso do Llama 4 Scout pela Groq}
-    \label{quad:groq_limites}
-    \begin{tabular}{|l|c|c|}
-        \hline
-        \textbf{Categoria} & \textbf{Por minuto} & \textbf{Por dia} \\
-        \hline
-        \textbf{Solicitações} & 30 & 1000 \\
-        \hline
-        \textbf{Uso de Tokens} & 30 mil & 500 mil \\
-        \hline
-    \end{tabular}
-\end{quadro}
+\begin{table}[htb]
+	\IBGEtab{%
+        \caption{Limites de Uso do Llama 4 Scout pela Groq}
+        \label{tab:groq_limites}
+	}{%
+		\begin{tabular}{lcc}
+			\toprule
+			Categoria & Por minuto & Por dia \\
+			\midrule \midrule
+			Solicitações & 0 & 1000 \\
+			\midrule 
+			Uso de tokens & 30 mil & 500 mil \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Groq}%
+	}
+\end{table}
 
 \subsection{Mistral}
 
@@ -215,20 +219,24 @@ A Google disponibiliza uma API\footnote{\url{https://aistudio.google.com/}} para
 Dentre os modelos do Google que possuem limite de requisições por minuto suficientemente alto para o projeto, 
 o Gemini 2.5 Flash é o de melhor performance.
 
-\begin{quadro}[htb]
-    \centering
-    \caption{Limites do Gemini 2.5 Flash}
-    \label{quad:gemini_limites}
-    \begin{tabular}{|l|c|c|}
-        \hline
-        \textbf{Categoria} & \textbf{Por minuto} & \textbf{Por dia} \\
-        \hline
-        \textbf{Solicitações} & 10 & 250 \\
-        \hline
-        \textbf{Uso de Tokens} & 250 mil & - \\
-        \hline
-    \end{tabular}
-\end{quadro}
+\begin{table}[htb]
+	\IBGEtab{%
+		\label{tab:gemini_limites}
+		\caption{Limites do Gemini 2.5 Flash}
+	}{%
+		\begin{tabular}{lcc}
+			\toprule
+			Categoria & Por minuto & Por dia \\
+			\midrule \midrule
+			Solicitações & 10 & 250 \\
+			\midrule 
+			Uso de tokens & 250 mil & - \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Google}%
+	}
+\end{table}
 
 De acordo com a empresa, o Gemini 2.5 Flash é 
 ``útil para a maioria das tarefas complexas, enquanto tem um equilibrio entre qualidade, custo e latência''.
