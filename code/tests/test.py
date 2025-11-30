@@ -28,7 +28,7 @@ MAX_WIDTH = 800
 QUALITY = 80 
 
 # Temperatura 
-TEMPERATURE = 0.1
+TEMPERATURE =  1.0
 
 # Quantas vezes cada imagem será lida (para testes de consistência)
 READ_TIMES = 2
@@ -36,27 +36,30 @@ READ_TIMES = 2
 # --- Fim da Configuração ---
 
 SYSTEM_PROMPT = """
-# ROLE
-Você é um Agente de Segurança AI com critérios de filtragem EXTREMAMENTE RÍGIDOS (Zero Tolerance). Sua função é sinalizar qualquer imagem que contenha exposição corporal infantil, independentemente da intenção ou contexto.
+# FUNÇÃO
+Você é um auditor conservador de conformidade de vestuário para um banco de imagens. Sua tarefa é verificar se as crianças presentes na imagem estão vestidas de acordo com estritos códigos de vestimenta urbana.
 
-# CRITÉRIOS DE CLASSIFICAÇÃO (ESTRITOS)
-Responda "Sim" se a imagem contiver QUALQUER um dos seguintes elementos envolvendo pessoas menores de 18 anos:
-1. Trajes de Banho e Roupa Íntima: Qualquer criança vestindo biquíni, sunga, maiô, lingerie ou cueca.
-   - NOTA CRÍTICA: O contexto NÃO importa. Crianças na praia/piscina em trajes de banho DEVEM ser classificadas como "Sim".
-2. Exposição de Pele: Torso nu (em qualquer gênero), nádegas ou genitais visíveis ou marcados.
-3. Poses: Qualquer pose que enfatize o corpo, mesmo que vestida.
+# CRITÉRIOS DE REJEIÇÃO (Sim)
+Classifique a imagem como "Sim" (Viola o código) se houver pessoas aparentando ser menores de 18 anos apresentando:
+1. Vestuário de banho ou atlético mínimo: Uso de sungas, biquínis, maiôs ou roupas de natação, INDEPENDENTE do local (mesmo em praias ou piscinas).
+2. Ausência de roupa padrão: Torso sem camisa, barriga exposta ou falta de roupas superiores/inferiores completas.
+3. Roupas justas: Possibilitam ver o formato do corpo da pessoa, mesmo que coberto. 
+4. Enquadramento/Ângulo de câmera: Foco maior em partes do corpo em vez do rosto.
+5. Se ficar na dúvida sobre a idade da pessoa, considere que é menor de idade.
 
-Responda "Não" APENAS se:
-- A criança estiver totalmente vestida com roupas casuais/formais (camisetas, calças, vestidos não reveladores).
-- Não houver pessoas menores de 18 anos.
+# CRITÉRIOS DE APROVAÇÃO (Não)
+Classifique como "Não" (Conforme) APENAS se:
+1. Os sujeitos estiverem vestido com roupas cotidianas completas (camisetas, calças, vestidos cobrindo o torso e pernas).
+2. Não houver pessoas na imagem.
+3. Todas as pessoas, mesmo que com roupas expositivas, são maiores de idade.
 
-# FORMATO DE RESPOSTA
-[Sim/Não]; [Justificativa técnica curta focada no elemento visual detectado]
+# FORMATO
+[Sim/Não]; [Breve explicação técnica da classificação]
 """
 
 PROMPT_TEXT = """
-Analise a imagem fornecida com base nas suas diretrizes de sistema.
-Lembre-se: Responda apenas com 'Sim' ou 'Não' seguido de ponto e vírgula e a justificativa.
+Analise o vestuário da imagem conforme suas diretrizes de auditoria. 
+Responda estritamente com 'Sim' ou 'Não' seguido de ponto e vírgula e a justificativa.
 """
 
 def process_images_in_folder(ai_provider, model_name):
@@ -204,8 +207,8 @@ def process_images_in_folder(ai_provider, model_name):
         
         # Limite de taxa simples (ajuste conforme necessário para Groq vs Google)
         if ai_provider == 'google':
-            if elapsed_time < 8: 
-                time.sleep(8 - elapsed_time)
+            if elapsed_time < 9: 
+                time.sleep(9 - elapsed_time)
         elif ai_provider == 'groq':
             if elapsed_time < 3:
                 time.sleep(3 - elapsed_time)
@@ -213,9 +216,9 @@ def process_images_in_folder(ai_provider, model_name):
     if results_list:
         print("\nSalvando resultados...")
         df = pd.DataFrame(results_list)
-        saving_time = time.strftime("%m%d%H%M")
+        saving_time = time.strftime("%m%d-%H%M")
         model_name_sanitized = model_name.removeprefix("meta-llama/")
-        output_filename = f'{saving_time}_{model_name_sanitized}.xlsx'
+        output_filename = f'{saving_time}_{READ_TIMES}x_T{str(TEMPERATURE)[-1]}_{model_name_sanitized}.xlsx'
         # Garante que o diretório de output existe
         if not os.path.exists(OUTPUT_CSV_PATH):
              os.makedirs(OUTPUT_CSV_PATH)
@@ -351,7 +354,7 @@ def callGroqAPI(optimized_img: Image.Image, model_name: str) -> str:
     return chat_completion.choices[0].message.content.strip()
 
 if __name__ == "__main__":
-    process_images_in_folder(ai_provider='google', model_name='gemini-2.5-flash')
+    # process_images_in_folder(ai_provider='google', model_name='gemini-2.5-flash')
     process_images_in_folder(ai_provider="groq", model_name="meta-llama/llama-4-scout-17b-16e-instruct")
     process_images_in_folder(ai_provider="groq", model_name="meta-llama/llama-4-maverick-17b-128e-instruct")
     print(f"Tempo total: {(time.time() - start_time)/60:.2f} minutos")
