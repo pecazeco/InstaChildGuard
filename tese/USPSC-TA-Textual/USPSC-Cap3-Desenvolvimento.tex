@@ -44,7 +44,7 @@ Toda essa aparente complicação a mais garante a segurança da extensão \cite{
 Um exemplo de chamada das APIs REST utilizadas por meio de cURL pode ser visto no \autoref{cap:apendice_doc_apis}.
 As chamadas foram adaptadas para o uso em JavaScript, utilizando a função \texttt{fetch()}, que é nativa da linguagem e permite fazer requisições HTTP assíncronas.
 
-\subsection{Testes}
+\subsection{Etapas de testes}
 Os passos da metodologia adotada para a realização dos testes, respectivos motivos das decisões tomadas e observações foram as seguintes:
 
 \begin{enumerate}
@@ -64,14 +64,15 @@ Os passos da metodologia adotada para a realização dos testes, respectivos mot
 	\begin{itemize}
 		\item Baixar metade sendo imagens que contenham sexualização de crianças e outra metade sendo imagens que não contenham, para ter resultados não enviesados.
 	\end{itemize}
-	\item Rodar scripts Python (\autoref{sec:script_testes}) desenvolvidos para avaliar as imagens baixadas utilizando o mesmo prompt utilizado na extensão.
+	\item Rodar script Python (\autoref{sec:script_testes}) desenvolvido para avaliar as imagens baixadas utilizando o mesmo prompt utilizado na extensão.
 	\begin{itemize}
 		\item Utilizar scripts possibilita testes sistemáticos, garantindo que os testes serão realizados sempre sobre as mesmas imagens e de maneira mais ágil do que ficar navegando no feed e anotando os resultados.
-		\item Foram feitos um script para cada API (Google e Groq), já que cada uma possui uma forma distinta de realizar a requisição.
+		\item Nesses testes, são extraídas métricas de performance de cada modelo, como tempo médio de requisição, precisão e acurácia.
 	\end{itemize}
 	\item Realizar adaptações no prompt do modelo buscando a maior acurácia possível.
 	\item Repetir os últimos 2 passos até alcançar um resultado satisfatório. 
-	\item Substituir o conjunto do melhor API + modelo + prompt no código da extensão JavaScript.
+	\item Testar alguns valores de temperatura para cada modelo e rodar novamente os testes até alcançar o melhor valor para cada um.
+	\item Substituir o conjunto do melhor API + modelo + prompt + temperatura no código da extensão JavaScript.
 \end{enumerate}
 
 \begin{figure}[htb]
@@ -82,6 +83,23 @@ Os passos da metodologia adotada para a realização dos testes, respectivos mot
 	\legend{Fonte: Instagram}
 	\end{center}	
 \end{figure}
+
+\subsection{Métricas de performance calculadas} \label{sec:metodologia_metricas}
+Nos testes, a partir do gabarito de cada imagem, a classificação respondida pelo modelo e o tempo que levou para as respostas, foram calculadas várias métricas relacionadas à performance. 
+
+Assumindo \(TN\): \textit{True Negative}, \(TP\): \textit{True Positive},
+\(FN\): \textit{False Negative} e \(FP\): \textit{False Positive}, temos as seguintes definições:
+\begin{equation}
+   \text{Acurácia} = \frac{TP + TN}{ TP + TN + FP + FN }
+\end{equation}
+\begin{equation}
+   \text{Precisão} = \frac{TP}{ TP + FP }
+\end{equation}
+\begin{equation}
+   \text{Revocação} = \frac{TP}{ TP + FN }
+\end{equation}
+
+Para avaliação da velocidade, foram consideradas o tempo médio de requisição, tempo mínimo, tempo máximo, e variância do tempo. Já para análise da consistência das respostas, cada modelo classificou cada imagem 2 vezes, e foi calculado de todas as imagens, qual percentual o modelo retornou a mesma classificação nas duas vezes. 
 
 \section{Código} \label{sec:codigo}
 Em um primeiro momento, a extensão proposta apenas analisa as postagens do Instagram dispostas no ``feed'', 
