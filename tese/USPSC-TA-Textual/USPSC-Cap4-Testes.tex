@@ -1,8 +1,58 @@
 %!TEX root = tese/main.tex
 \chapter{Testes e Resultados} \label{chap:testes_resultados}
+Esse capítulo busca descrever como se deram os testes realizados no modelo e seus resultados. 
+Primeiramente, foi testado na prática o bom funcionamento da extensão: como ficou o frontend, fluidez e frequência de erros.
+Além disso, foram realizados testes sistematizados (a partir do script da \autoref{sec:script_testes}) que armazenaram métricas para a comparação dos desempenhos dos modelos
 
-\section{Funcionamento}
-iniciar mostrando como ficou o frontend e quando da erro e depois ir pra os testes em si 
+\section{Teste de funcionamento}
+O frontend (\ref{sec:frontend}) final da aplicação consiste na tela de erro (\autoref{fig:frontend_erro}), na animação de carregamento (\ref{fig:frontend_analisando}), no selo de imagem sem identificação de crianças sexualizadas (\ref{fig:frontend_verificacao}) e na censura (\ref{fig:frontend_censura}). 
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de erro}
+    \label{fig:frontend_erro}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_erro.png} \\
+	\legend{Fonte: elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de postagem sendo analisada}
+    \label{fig:frontend_analisando}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_analisando.png} \\
+	\legend{Fonte: elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de postagem com selo de sem identificação de sexualização}
+    \label{fig:frontend_verificacao}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_verificado.png} \\
+	\legend{Fonte: elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de postagem censurada}
+    \label{fig:frontend_censura}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_censurado.png} \\
+	\legend{Fonte: elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+Sobre a fluidez no funcionamento, a animação de carregamento da \autoref{fig:frontend_analisando} se mantém na imagem por pouco tempo. 
+Por conta do funcionamento assíncrono das chamadas da API, as chamadas são feitas muitas vezes antes do usuário ter chegado na postagem, tornando frequentemente imperceptível o tempo de análise.
+Porém, vale dizer que não foi implementada uma maneira de indentificar se a imagem já foi analisada, ou seja, se o usuário ver mais de uma vez a mesma postagem (descendo e subindo o feed, por exemplo), pode ser que ele veja a animação de carregamento duas vezes.
+
+Após a devida calibração nos prompts, tratamento de erros e configurações de segurança das APIs, o número de casos de erros passaram a ser bem raros. Na versão final do projeto, os testes mostraram que a maior parte das postagens com erro são na verdade propagandas que possuem configurações de privacidade que impedem que estas sejam enviadas para as APIs. Porém, há casos raros onde postagens de verdade dão erro, sendo a maioria infrigementos de alguma política de segurança da GenAI ou do próprio Instagram.
+
+Na prática, postagens com erro representam algo em torno de 1 a cada 100 imagens, sendo bem mais presentes na API do Gemini do que na do Groq.
+Como a primeira é um modelo de código fechado, a Google possui políticas mais rígidas de controle de prompt, se negando a responder quando identifica um conteúdo mais sensível. Já a Groq, o número de erros é ainda menor, basicamente só acontecendo quando há algum problema na comunicação.
+
+Para contornar o problema de erros na API da Google, as configurações de segurança\footnote{Opções de configurações de segurança: \url{https://ai.google.dev/gemini-api/docs/safety-settings?hl=pt-br}} foram flexibilizadas, e erros ligados à segurança foram tratados como sendo uma resposta sim à censura. Essas ações ajudaram mas não eliminaram os erros.
 
 \section{Testes de prompt}
 

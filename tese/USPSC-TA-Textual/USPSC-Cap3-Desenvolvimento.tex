@@ -403,7 +403,7 @@ As classes CSS utilizadas para estilizar o frontend estão definidas no arquivo 
 
 O script Python desenvolvido para realizar os testes faz as chamadas com base na documentação oficial de ambas as APIs, conforme mostrado no \autoref{cap:apendice_doc_apis}.
 
-O script lê 3 vezes todas as imagens de uma pasta específica, faz o mesmo redimensionamento e otimização de imagem que o content script faz,
+O script lê \(N\) vezes todas as imagens de uma pasta específica, faz o mesmo redimensionamento e otimização de imagem que o content script faz,
 e então faz a chamada para a API e modelo escolhidos.
 Após receber a resposta, o script processa o texto retornado e 
 guarda uma lista de informações do resultado. Ao final, as informações sobre todas as imagens são salvas em um arquivo CSV para análise posterior.
@@ -461,5 +461,5 @@ elif AI_PROVIDER == 'groq':
         time.sleep(2.5 - elapsed_time)
 \end{lstlisting}
 
-O código lê todas as imagens três vezes para analisarmos a consistência dos resultados.
+O código lê todas as imagens \(N\) vezes para ser analisada a consistência dos resultados.
 Se o modelo retornar resultados diferentes para a mesma imagem em execuções distintas, isso indica que o prompt ainda não está robusto o suficiente.
