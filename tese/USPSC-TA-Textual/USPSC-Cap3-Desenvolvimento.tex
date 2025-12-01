@@ -35,7 +35,7 @@ Toda essa aparente complicação a mais garante a segurança da extensão \cite{
 	\caption{Arquitetura completa de uma extensão}
     \label{fig:extensions_arquitetura}
 	\includegraphics[width=0.8\textwidth]{USPSC-img/extensions-architecture.png} \\
-	\legend{Fonte: \url{https://youtu.be/TRwYaZPJ0h8?si=2gh3gnVSlcj5LRXF&t=194}}
+	\fonte{\url{https://youtu.be/TRwYaZPJ0h8?si=2gh3gnVSlcj5LRXF&t=194}}
 	\end{center}	
 \end{figure}
 
@@ -44,7 +44,7 @@ Toda essa aparente complicação a mais garante a segurança da extensão \cite{
 Um exemplo de chamada das APIs REST utilizadas por meio de cURL pode ser visto no \autoref{cap:apendice_doc_apis}.
 As chamadas foram adaptadas para o uso em JavaScript, utilizando a função \texttt{fetch()}, que é nativa da linguagem e permite fazer requisições HTTP assíncronas.
 
-\subsection{Etapas de testes}
+\subsection{Etapas de testes} \label{sec:metodologia_etapas_testes}
 Os passos da metodologia adotada para a realização dos testes, respectivos motivos das decisões tomadas e observações foram as seguintes:
 
 \begin{enumerate}
@@ -62,7 +62,7 @@ Os passos da metodologia adotada para a realização dos testes, respectivos mot
 	\item Navegar pelo feed e curtir e abrir comentários das postagens que tem algum tipo de sugestão sexual de crianças.
 	\item Extrair (fazer download) de imagens que aparecerem no feed, avaliando manualmente se contém ou não sexualização infantil.
 	\begin{itemize}
-		\item Baixar metade sendo imagens que contenham sexualização de crianças e outra metade sendo imagens que não contenham, para ter resultados não enviesados.
+		\item Baixar 20 sendo imagens que contenham sexualização de crianças e 20 sendo imagens que não contenham, para ter resultados não enviesados.
 	\end{itemize}
 	\item Rodar script Python (\autoref{sec:script_testes}) desenvolvido para avaliar as imagens baixadas utilizando o mesmo prompt utilizado na extensão.
 	\begin{itemize}
@@ -80,7 +80,7 @@ Os passos da metodologia adotada para a realização dos testes, respectivos mot
 	\caption{Aviso de abuso sexual}
     \label{fig:aviso_abuso}
 	\includegraphics[width=0.5\textwidth]{USPSC-img/aviso-abuso-sexual.png} \\
-	\legend{Fonte: Instagram}
+	\fonte{Instagram}
 	\end{center}	
 \end{figure}
 
@@ -99,7 +99,21 @@ Assumindo \(TN\): \textit{True Negative}, \(TP\): \textit{True Positive},
    \text{Revocação} = \frac{TP}{ TP + FN }
 \end{equation}
 
+No caso desse projeto, procura-se principalmente reduzir o número de falsos negativos (\(FN\)),
+já que, por segurança, é melhor a IA tender a censurar do que não censurar. Assim, prioriza-se o aumento do valor da revocação em relação à precisão, que pode ser traduzida como ``de todos as imagens que deveriam ser classificadas como sim, quantas o modelo acertou?''. 
+
 Para avaliação da velocidade, foram consideradas o tempo médio de requisição, tempo mínimo, tempo máximo, e variância do tempo. Já para análise da consistência das respostas, cada modelo classificou cada imagem 2 vezes, e foi calculado de todas as imagens, qual percentual o modelo retornou a mesma classificação nas duas vezes. 
+
+\subsection{Variação da temperatura}
+
+A temperatura é um parâmetro que controla a aleatoriedade da saída de uma GenAI, balanceando criatividade e coerência.
+Uma temperatura baixa (perto de 0), cria saídas mais previsíveis,  determinísticas e focadas, enquanto que valores altos (perto ou acima de 1), 
+aumentam a aleatoriedade e criatividade.
+
+No caso desse projeto, onde o trabalho é de classificar imagens de maneira binária, são esperadas saídas mais corretas de temperaturas mais baixas. 
+Porém, como existe alguma certa subjetividade na nossa classificação, pode ser que o modelo se beneficie de um aumento na temperatura.
+Visto isso, inicialmente todos os prompts foram testados utilizando a temperatura de \(0,1\). Ao final, escolhido o melhor prompt para cada modelo, 
+alterações foram feitas na temperatura buscando o melhor resultado possível.
 
 \section{Código} \label{sec:codigo}
 Em um primeiro momento, a extensão proposta apenas analisa as postagens do Instagram dispostas no ``feed'', 

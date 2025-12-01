@@ -67,7 +67,7 @@ APIs de detecção muitas vezes podem delimitar na imagem os objetos contidos, c
 	\caption{Exemplo de detecção em imagem}
     \label{fig:identificacao_objetos}
 	\includegraphics[width=0.8\textwidth]{USPSC-img/objects-detection.png} \\
-	\legend{Fonte: \url{https://www.edenai.co/post/top-10-object-detection-apis}}
+	\fonte{\url{https://www.edenai.co/post/top-10-object-detection-apis}}
 	\end{center}	
 \end{figure}
 
@@ -121,7 +121,7 @@ Ao final, de todos os modelos testados, o que se saiu melhor em todos os critér
         \caption{Multimodais}
         \includegraphics[width=\linewidth]{USPSC-img/performance-multimodal.png}
     \end{subfigure} 
-    \legend{Fonte: \cite{than2024}}
+    \fonte{\cite{than2024}}
 \end{table}
 
 No estudo citado, foi concluído que modelos multimodais podem performar até melhor que redes de aprendizado profundo na falta de dados suficientes de treinamento.
@@ -146,7 +146,7 @@ já na \autoref{fig:than_explicabilidade_imagem} foi solicitado ao modelo gerar 
         \label{fig:than_explicabilidade_imagem}
         \includegraphics[width=\linewidth]{USPSC-img/explicabilidade-heatmap.png}
     \end{subfigure} 
-    \legend{Fonte: \cite{than2024}}
+    \fonte{\cite{than2024}}
 \end{figure}
 
 Enfim, como foi demonstrado, é totalmente possível utilizar modelos multimodais e consiliar uma boa acurácia com a conveniência de se comunicar com a ferramenta utilizando linguagem natural. 
@@ -172,7 +172,7 @@ Esse destaque pode ser observado no gráfico da \autoref{fig:cerebra_performance
 	\caption{Comparação de performance de provedores de IA utilizando mesmo modelo}
     \label{fig:cerebra_performance}
 	\includegraphics[width=0.9\textwidth]{USPSC-img/cerebra-performance.jpg} \\
-	\legend{Fonte: \url{https://www.cerebras.ai/blog/cerebras-inference-3x-faster}}
+	\fonte{\url{https://www.cerebras.ai/blog/cerebras-inference-3x-faster}}
 	\end{center}	
 \end{figure}
 
@@ -226,7 +226,7 @@ o Gemini 2.5 Flash é o de melhor performance.
 	}{%
 		\begin{tabular}{lcc}
 			\toprule
-			Categoria & Por minuto & Por dia \\
+			Categoria & Limite por minuto & Limite por dia \\
 			\midrule \midrule
 			Solicitações & 10 & 250 \\
 			\midrule 
@@ -251,7 +251,7 @@ Por se tratar de um modelo estado da arte dentro das opções de resposta rápid
 a escolha do uso do Gemini 2.5 Flash foi a natural.
 No caso da Mistral, seus limites são bem mais do que o suficiente para a aplicação, 
 mas a sua performance não é tão boa, logo não foi escolhida.
-Cerebras foi descartada por não dar acesso por API ao envio de imagens. 
+Cerebras foi descartada rapidamente por não dar acesso por API ao envio de imagens. 
 Já a Groq, apesar de ter restrições mais severas, dá acesso a dois modelos multimodais e foi considerada para uso.
 
 Portanto, os testes utilizaram os Llama 4 Scout/Maverick disponibilizados pela Groq e o modelo da Google.
