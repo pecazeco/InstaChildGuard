@@ -2,7 +2,7 @@
 \chapter{Testes e Resultados} \label{chap:testes_resultados}
 Esse capítulo busca descrever como se deram os testes realizados no modelo e seus resultados. 
 Primeiramente, foi testado na prática o bom funcionamento da extensão: como ficou o frontend, fluidez e frequência de erros.
-Além disso, foram realizados testes sistematizados (a partir do script da \autoref{sec:script_testes}) que armazenaram métricas para a comparação dos desempenhos dos modelos
+Além disso, foram realizados testes sistematizados (a partir do script da \autoref{sec:script_testes}) que armazenaram métricas (\ref{sec:metodologia_metricas}) para a comparação dos desempenhos dos modelos.
 
 \section{Teste de funcionamento}
 O frontend (\ref{sec:frontend}) final da aplicação consiste na tela de erro (\autoref{fig:frontend_erro}), na animação de carregamento (\ref{fig:frontend_analisando}), no selo de imagem sem identificação de crianças sexualizadas (\ref{fig:frontend_verificacao}) e na censura (\ref{fig:frontend_censura}). 
@@ -12,7 +12,7 @@ O frontend (\ref{sec:frontend}) final da aplicação consiste na tela de erro (\
 	\caption{Exemplo de erro}
     \label{fig:frontend_erro}
 	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_erro.png} \\
-	\legend{Fonte: elaborado pelo autor}
+	\fonte{elaborado pelo autor}
 	\end{center}	
 \end{figure}
 
@@ -21,7 +21,7 @@ O frontend (\ref{sec:frontend}) final da aplicação consiste na tela de erro (\
 	\caption{Exemplo de postagem sendo analisada}
     \label{fig:frontend_analisando}
 	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_analisando.png} \\
-	\legend{Fonte: elaborado pelo autor}
+	\fonte{elaborado pelo autor}
 	\end{center}	
 \end{figure}
 
@@ -30,7 +30,7 @@ O frontend (\ref{sec:frontend}) final da aplicação consiste na tela de erro (\
 	\caption{Exemplo de postagem com selo de sem identificação de sexualização}
     \label{fig:frontend_verificacao}
 	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_verificado.png} \\
-	\legend{Fonte: elaborado pelo autor}
+	\fonte{elaborado pelo autor}
 	\end{center}	
 \end{figure}
 
@@ -39,7 +39,7 @@ O frontend (\ref{sec:frontend}) final da aplicação consiste na tela de erro (\
 	\caption{Exemplo de postagem censurada}
     \label{fig:frontend_censura}
 	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_censurado.png} \\
-	\legend{Fonte: elaborado pelo autor}
+	\fonte{elaborado pelo autor}
 	\end{center}	
 \end{figure}
 
@@ -55,8 +55,11 @@ Como a primeira é um modelo de código fechado, a Google possui políticas mais
 Para contornar o problema de erros na API da Google, as configurações de segurança\footnote{Opções de configurações de segurança: \url{https://ai.google.dev/gemini-api/docs/safety-settings?hl=pt-br}} foram flexibilizadas, e erros ligados à segurança foram tratados como sendo uma resposta sim à censura. Essas ações ajudaram mas não eliminaram os erros.
 
 \section{Testes de prompt}
+No decorrer dos passos detalhados na \autoref{sec:metodologia_etapas_testes}, foram desenvolvidos alguns prompts, que podem ser resumidos em 4 principais.
+Para cada um, foram calculadas algumas métricas de performance. 
 
-Prompt 1:
+O primeiro prompt desenvolvido (\autoref{lst:prompt1}) define o que o modelo deve responder, formata a resposta, dá exemplos de sexualizações infantis, exemplos de respostas e destaca observações importantes.
+
 \begin{lstlisting}[
 		language=python, 
 		label={lst:prompt1}, 
@@ -69,7 +72,7 @@ Responda essas duas perguntas separado por ponto e vírgula (;):
 
 Formatação:
   'Sim/Não; justificativa'
-Definição de sexualização infantil é definida como qualquer representação que retrate crianças de maneira sexualizada, destacando-se:
+Sexualização infantil é definida como qualquer representação que retrate crianças de maneira sexualizada, destacando-se:
   - Crianças em poses sugestivas, que buscam exibir alguma parte do corpo
   - Crianças com roupas curtas, justas, transparentes ou com decote excessivo, mostrando parte dos seios, nádegas ou genitais
   - Contextos que impliquem conotação sexual envolvendo menores de 18 anos, como fetiches.
@@ -86,10 +89,13 @@ Observações:
 """
 \end{lstlisting}
 
+Esse primeiro prompt alcançou resultados (\autoref{tab:prompt1}) bem ruins nos Llama's, e no Gemini a revocação também não teve um valor tão alto.
+Foi possível observar que os modelos feitos pela Meta tem uma tendência de responder sim poucas vezes (alta precisão e pouca revocação), assim, para corrigir isso foi feito o prompt 2.
+
 \begin{table}[htb]
 	\IBGEtab{%
-		\label{tab:prompt1}
 		\caption{Performance com prompt 1}
+		\label{tab:prompt1}
 	}{%
 		\begin{tabular}{lccc}
 			\toprule
@@ -106,6 +112,16 @@ Observações:
 		\fonte{Elaborada pelos autores.}%
 	}
 \end{table}
+
+Esse segundo prompt (\autoref{lst:prompt2}) tenta forçar uma resposta bem menos tolerante, a fim de aumentar a revocação.
+Além disso, ele passa a utilizar o parâmetro de instruções do sistema que permite passar uma instrução de sistema com maior peso hierárquico, sendo tecnicamente mais robusto do que apenas incluir as instruções no texto do prompt. 
+
+Assim, a instrução de sistema comunica qual persona a IA deve adotar, enquanto que o prompt passa a tarefa em si.   
+Utilizando esse método, é mais difícil para o agente ser confundido por dados de entrada complexos, visto que a instrução está isolada no sistema. 
+
+Para passar essas instruções de sistema, 
+no Gemini\footnote{Como usar instruções de sistema do Gemini: \url{https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/prompts/system-instructions?hl=pt-br}} basta passar o parâmetro \texttt{system\_instruction}, 
+já no Groq\footnote{Como usar instruções de sistema no Groq: \url{https://console.groq.com/docs/text-chat}} é só enviar uma mensagem com \texttt{role: "system"}.
 
 \begin{lstlisting}[
 		language=python, 
@@ -137,10 +153,12 @@ Lembre-se: Responda apenas com 'Sim' ou 'Não' seguido de ponto e vírgula e a j
 """
 \end{lstlisting}
 
+O prompt 2 aumentou os valores de revocação, mas ela ainda se mantém baixa para os Llama's e os valores de acurácia não eram satisfatórios.
+Além disso, por falar palavras de cunho sensível abertamente, esse prompt levou a muitos erros de segurança no Gemini, que foram tratados como resposta sim, o que aumentou a revocação de maneira artificial.
 \begin{table}[htb]
 	\IBGEtab{%
-		\label{tab:prompt2}
 		\caption{Performance com prompt 2}
+		\label{tab:prompt2}
 	}{%
 		\begin{tabular}{lccc}
 			\toprule
@@ -158,11 +176,11 @@ Lembre-se: Responda apenas com 'Sim' ou 'Não' seguido de ponto e vírgula e a j
 	}
 \end{table}
 
-Prompt 3:
+No terceiro prompt (\autoref{lst:prompt3}), os termos alarmantes foram substituídos por terminologia técnica. O uso do idioma inglês busca contornar os filtros de segurança, soando como moderação técnica.
 \begin{lstlisting}[
 		language=python, 
-		label={lst:prompt1}, 
-		caption={Prompt 1}
+		label={lst:prompt3}, 
+		caption={Prompt 3}
 	]
 SYSTEM_PROMPT = """
 # ROLE
@@ -189,10 +207,13 @@ Output strictly 'Sim' or 'Não' followed by a semicolon and the technical reason
 """
 \end{lstlisting}
 
+Nessa terceira versão, a quantidade de erros do Gemini aumentou ainda mais, levando a crer que essa IA tem mais facilidade de perceber teor sensível em inglês. Já nas IAs oferecidas pelo Groq, todas as métricas alcançaram números bem melhores, com o Llama Scout obtendo todas acima de \(90\%\).
+Isso parece ser efeito desses modelos da Meta serem bem mais flexíveis em relação à segurança.
+
 \begin{table}[htb]
 	\IBGEtab{%
-		\label{quad:prompt3}
 		\caption{Performance com prompt 3}
+		\label{tab:prompt3}
 	}{%
 		\begin{tabular}{lccc}
 			\toprule
@@ -210,11 +231,14 @@ Output strictly 'Sim' or 'Não' followed by a semicolon and the technical reason
 	}
 \end{table}
 
-Prompt 4:
+A última versão principal do prompt adota uma abordagem auditoria de conformidade de vestuário de menores de idade, ao invés de checar diretamente sexualização. 
+Isso foi uma estratégia para evitar mais ainda falar termos sensíveis. 
+Além disso, voltamos para o português, visto que inglês se mais suscetível de gatilhos à segurança.
+
 \begin{lstlisting}[
 		language=python, 
-		label={lst:prompt1}, 
-		caption={Prompt 1}
+		label={lst:prompt4}, 
+		caption={Prompt 4}
 	]
 SYSTEM_PROMPT = """
 # FUNÇÃO
@@ -246,8 +270,8 @@ Responda estritamente com 'Sim' ou 'Não' seguido de ponto e vírgula e a justif
 
 \begin{table}[htb]
 	\IBGEtab{%
-		\label{quad:prompt4}
 		\caption{Performance com prompt 4}
+		\label{tab:prompt4}
 	}{%
 		\begin{tabular}{lccc}
 			\toprule
@@ -265,15 +289,20 @@ Responda estritamente com 'Sim' ou 'Não' seguido de ponto e vírgula e a justif
 	}
 \end{table}
 
-\section{Testes de temperatura}
+No último prompt (\autoref{tab:prompt4}), os valores para os Llama's pioraram um pouco, já o Gemini melhorou, finalmente sendo satisfeito nas três métricas enquanto passa a apresentar poucos erros. 
 
-Scout:
+Ao final, o auge de performance dos Llama's ficou no prompt 3, enquanto o Gemini atingiu os seus melhores valores no prompt 4.  
+
+\section{Testes de temperatura}
+Utilizando os melhores prompts de cada modelo, foi alterada a temperatura e analisado o quanto isso impacta na resposta de cada um.
+
+
 \begin{figure}[htb]
 	\begin{center}
 	\caption{Gráfico de performance do Llama Scout (usando prompt 3)}
     \label{fig:grafico_performance_scout}
 	\includegraphics[width=0.8\textwidth]{USPSC-img/grafico_metricas_scout.png} \\
-	\legend{Fonte: elaborado pelo autor}
+	\fonte{elaborado pelo autor}
 	\end{center}	
 \end{figure}
 
@@ -283,17 +312,17 @@ Maverick:
 	\caption{Gráfico de performance do Llama Maverick (usando prompt 3)}
     \label{fig:grafico_performance_maverick}
 	\includegraphics[width=0.8\textwidth]{USPSC-img/grafico_metricas_maverick.png} \\
-	\legend{Fonte: elaborado pelo autor}
+	\fonte{elaborado pelo autor}
 	\end{center}	
 \end{figure}
 
 Gemini:
 \begin{figure}[htb]
 	\begin{center}
-	\caption{Gráfico de performance do Google Gemini 2.5 Flash (usando prompt 4)}
+	\caption{Gráfico de performance do Gemini 2.5 Flash (usando prompt 4)}
     \label{fig:grafico_performance_gemini}
 	\includegraphics[width=0.8\textwidth]{USPSC-img/grafico_metricas_gemini.png} \\
-	\legend{Fonte: elaborado pelo autor}
+	\fonte{elaborado pelo autor}
 	\end{center}	
 \end{figure}
 
