@@ -7,6 +7,8 @@ if (!API_CONFIG) {
   !API_CONFIG.GOOGLE_API_KEY ||
   !API_CONFIG.GROQ_API_KEY ||
   !API_CONFIG.SYSTEM_PROMPT ||
+  !API_CONFIG.PROMPT ||
+  API_CONFIG.MODEL_TEMPERATURE === undefined ||
   !API_CONFIG.AI_PROVIDER
 ) {
   throw new Error("Configurações de API estão faltando no config.js.");
@@ -22,6 +24,7 @@ const GROQ_API_KEY = API_CONFIG.GROQ_API_KEY;
 const AI_PROVIDER = API_CONFIG.AI_PROVIDER;
 const GROQ_AI_MODEL = API_CONFIG.GROQ_AI_MODEL;
 const SYSTEM_PROMPT = API_CONFIG.SYSTEM_PROMPT;
+const PROMPT = API_CONFIG.PROMPT;
 const MODEL_TEMPERATURE = API_CONFIG.MODEL_TEMPERATURE;
 
 // --- LÓGICA DE NAVEGAÇÃO ---
@@ -78,11 +81,7 @@ async function performImageAnalysis(imageURL, provider) {
     const imageParts = await resizeImageAndConvertToBase64(imageURL, 768, 0.8);
 
     // 2. Chama a função genérica de API
-    const responseText = await callAIProvider(
-      provider,
-      imageParts,
-      SYSTEM_PROMPT
-    );
+    const responseText = await callAIProvider(provider, imageParts);
 
     console.log(`background.js: Resposta da API (${provider}):`, responseText);
 
@@ -96,7 +95,7 @@ async function performImageAnalysis(imageURL, provider) {
 }
 
 // --- FUNÇÃO QUE GERENCIA A CHAMADA PARA CADA API ---
-async function callAIProvider(provider, imageParts, prompt) {
+async function callAIProvider(provider, imageParts) {
   let url, options;
 
   // 1. A partir do provedor, configura url e opções para o fetch
@@ -105,10 +104,13 @@ async function callAIProvider(provider, imageParts, prompt) {
     url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
 
     const body = {
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
+      },
       contents: [
         {
           parts: [
-            { text: prompt },
+            { text: PROMPT },
             {
               inlineData: {
                 mime_type: imageParts.mimeType,
@@ -118,6 +120,19 @@ async function callAIProvider(provider, imageParts, prompt) {
           ],
         },
       ],
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_NONE",
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_NONE",
+        },
+      ],
+      generationConfig: { temperature: MODEL_TEMPERATURE },
     };
 
     options = {
@@ -133,9 +148,13 @@ async function callAIProvider(provider, imageParts, prompt) {
       model: GROQ_AI_MODEL,
       messages: [
         {
+          role: "system",
+          content: SYSTEM_PROMPT,
+        },
+        {
           role: "user",
           content: [
-            { type: "text", text: prompt },
+            { type: "text", text: PROMPT },
             {
               type: "image_url",
               image_url: {
@@ -165,17 +184,43 @@ async function callAIProvider(provider, imageParts, prompt) {
   const response = await fetch(url, options);
 
   if (!response.ok) {
+    // Se deu erro, identifica se foi um erro de conteúdo proibido
+    const errorText = await response.text();
+    if (errorText.includes("PROHIBITED_CONTENT")) {
+      return "Sim; Conteúdo Proibido (Capturado via HTTP Error).";
+    }
     throw new Error(
-      `Erro na API ${provider}: ${response.status} - ${await response.text()}`
+      `Erro na API ${provider}: ${response.status} - ${errorText}`
     );
   }
 
   // 3. A partir da resposta em json, extrai o texto conforme o provedor
   const data = await response.json();
   if (provider === "google") {
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text)
+    if (data.promptFeedback?.blockReason) {
+      return `Sim; Bloqueado pelo filtro de Prompt (${data.promptFeedback.blockReason}).`;
+    }
+
+    if (data.candidates && data.candidates.length > 0) {
+      const candidate = data.candidates[0];
+      const finishReason = candidate.finishReason;
+
+      if (finishReason === "PROHIBITED_CONTENT") {
+        return "Sim; Conteúdo Proibido detectado (FinishReason: PROHIBITED_CONTENT).";
+      }
+
+      if (finishReason === "SAFETY") {
+        return "Sim; Conteúdo Inseguro detectado (FinishReason: SAFETY).";
+      }
+
+      if (candidate.content?.parts?.[0]?.text) {
+        return candidate.content.parts[0].text;
+      } else {
+        return "Sim; Bloqueio silencioso ou resposta vazia.";
+      }
+    } else {
       throw new Error("Resposta inválida Gemini");
-    return data.candidates[0].content.parts[0].text;
+    }
   } else if (provider === "groq") {
     if (!data.choices?.[0]?.message?.content)
       throw new Error("Resposta inválida Groq");
