@@ -2,26 +2,34 @@
   "manifest_version": 3,
   "name": "Adultization Identifier for Instagram",
   "version": "1.0",
-  "description": "Aplica um desfoque a posts do Instagram que potencialmente possuem conteúdo de sexualização infantil.",
+  "description": "Bloqueia posts do Instagram contendo sexualizacao infantil.",
   "content_scripts": [
     {
       "matches": ["*://*.instagram.com/*"],
-      "js": ["contentScript.js"]
+      "js": ["contentScript.js"],
+      "css": ["styles.css"]
     }
   ],
   "web_accessible_resources": [
-    { 
+    {
       "resources": [
         "images/warning-sign.png",
         "images/checkmark.png",
         "images/loading.gif",
-        "images/error.svg"
+        "images/error.svg",
+        "config.js"
       ],
       "matches": ["*://*.instagram.com/*"]
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "permissions": ["tabs"]
+  "permissions": ["tabs"],
+  "host_permissions": [
+    "*://*.cdninstagram.com/*",
+    "*://*.googleapis.com/*",
+    "https://api.groq.com/*"
+  ]
 }

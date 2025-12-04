@@ -1,0 +1,381 @@
+%!TEX root = tese/main.tex
+\chapter{Testes e Resultados} \label{chap:testes_resultados}
+Esse capítulo busca descrever como se deram os testes realizados no modelo e seus resultados. 
+Primeiramente, foi testado na prática o bom funcionamento da extensão: como ficou o frontend, fluidez e frequência de erros.
+Além disso, foram realizados testes sistematizados (a partir do script da \autoref{sec:script_testes}) que armazenaram métricas (\ref{sec:metodologia_metricas}) para a comparação dos desempenhos dos modelos.
+
+\section{Teste de funcionamento}
+O frontend (\ref{sec:frontend}) final da aplicação consiste na tela de erro (\autoref{fig:frontend_erro}), na animação de carregamento (\ref{fig:frontend_analisando}), no selo de imagem sem identificação de crianças sexualizadas (\ref{fig:frontend_verificacao}) e na censura (\ref{fig:frontend_censura}). 
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de erro}
+    \label{fig:frontend_erro}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_erro.png} \\
+	\fonte{elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de postagem sendo analisada}
+    \label{fig:frontend_analisando}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_analisando.png} \\
+	\fonte{elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de postagem com selo de sem identificação de sexualização}
+    \label{fig:frontend_verificacao}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_verificado.png} \\
+	\fonte{elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Exemplo de postagem censurada}
+    \label{fig:frontend_censura}
+	\includegraphics[width=0.6\textwidth]{USPSC-img/frontend_censurado.png} \\
+	\fonte{elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+Sobre a fluidez no funcionamento, a animação de carregamento da \autoref{fig:frontend_analisando} se mantém na imagem por pouco tempo. 
+Por conta do funcionamento assíncrono das chamadas da API, as chamadas são feitas muitas vezes antes do usuário ter chegado na postagem, tornando frequentemente imperceptível o tempo de análise.
+Porém, vale dizer que não foi implementada uma maneira de indentificar se a imagem já foi analisada, ou seja, se o usuário ver mais de uma vez a mesma postagem (descendo e subindo o feed, por exemplo), pode ser que ele veja a animação de carregamento duas vezes.
+
+Após a devida calibração nos prompts, tratamento de erros e configurações de segurança das APIs, o número de casos de erros passaram a ser bem raros. Na versão final do projeto, os testes mostraram que a maior parte das postagens com erro são na verdade propagandas que possuem configurações de privacidade que impedem que estas sejam enviadas para as APIs. Porém, há casos raros onde postagens de verdade dão erro, sendo a maioria infrigementos de alguma política de segurança da GenAI ou do próprio Instagram.
+
+Na prática, postagens com erro representam algo em torno de 1 a cada 100 imagens, sendo bem mais presentes na API do Gemini do que na do Groq.
+Como a primeira é um modelo de código fechado, a Google possui políticas mais rígidas de controle de prompt, se negando a responder quando identifica um conteúdo mais sensível. Já a Groq, o número de erros é ainda menor, basicamente só acontecendo quando há algum problema na comunicação.
+
+Para contornar o problema de erros na API da Google, as configurações de segurança\footnote{Opções de configurações de segurança: \url{https://ai.google.dev/gemini-api/docs/safety-settings?hl=pt-br}} foram flexibilizadas, e erros ligados à segurança foram tratados como sendo uma resposta sim à censura. Essas ações ajudaram mas não eliminaram os erros.
+
+\section{Testes de prompt}
+No decorrer dos passos detalhados na \autoref{sec:metodologia_etapas_testes}, foram desenvolvidos alguns prompts, que podem ser resumidos em 4 principais.
+Para cada um, foram calculadas algumas métricas de performance. 
+
+O primeiro prompt desenvolvido (\autoref{lst:prompt1}) define o que o modelo deve responder, formata a resposta, dá exemplos de sexualizações infantis, exemplos de respostas e destaca observações importantes.
+
+\begin{lstlisting}[
+		language=python, 
+		label={lst:prompt1}, 
+		caption={Prompt 1}
+	]
+PROMPT_TEXT = """
+Responda essas duas perguntas separado por ponto e vírgula (;):
+- 'Sim', se a imagem contém casos de sexualização infantil, e 'Não', caso contrário.
+- Justifique a sua resposta em poucas palavras.
+
+Formatação:
+  'Sim/Não; justificativa'
+Sexualização infantil é definida como qualquer representação que retrate crianças de maneira sexualizada, destacando-se:
+  - Crianças em poses sugestivas, que buscam exibir alguma parte do corpo
+  - Crianças com roupas curtas, justas, transparentes ou com decote excessivo, mostrando parte dos seios, nádegas ou genitais
+  - Contextos que impliquem conotação sexual envolvendo menores de 18 anos, como fetiches.
+  - Crianças aqui se referem a qualquer pessoa com aparência de idade inferior a 18 anos.
+Exemplo de respostas:
+a) 'Sim; Foto contém criança de biquine e em posição altamente sugestiva.'
+b) 'Não; Uma paisagem com montanhas e um lago.'
+c) 'Não; Criança brincando em um parque com roupas apropriadas para a idade.'
+d) 'Sim; Pessoa aparentando ser menor de idade em trajes reveladores.'
+
+Observações:
+- Antes do ';' deve haver apenas 'Sim' ou 'Não', sem mais nada.
+- Se houver dúvida sobre a idade, considere como criança.
+"""
+\end{lstlisting}
+
+Esse primeiro prompt alcançou resultados (\autoref{tab:prompt1}) bem ruins nos Llama's, e no Gemini a revocação também não teve um valor tão alto.
+Foi possível observar que os modelos feitos pela Meta tem uma tendência de responder sim poucas vezes (alta precisão e pouca revocação), assim, para corrigir isso foi feito o prompt 2.
+
+\begin{table}[htb]
+	\IBGEtab{%
+		\caption{Performance com prompt 1}
+		\label{tab:prompt1}
+	}{%
+		\begin{tabular}{lccc}
+			\toprule
+			Métrica & Gemini 2.5 Flash  & Llama Scout  & Llama Maverick \\
+			\midrule \midrule
+			Acurácia & \(82,5\%\) & \(62,5\%\) & \(55,0\%\) \\
+			\midrule 
+			Precisão & \(88,2\%\) & \(100,0\%\) & \(100,0\%\) \\
+			\midrule 
+			Revocação & \(75,0\%\) & \(25,0\%\) & \(10,0\%\) \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Elaborada pelos autores.}%
+	}
+\end{table}
+
+Esse segundo prompt (\autoref{lst:prompt2}) tenta forçar uma resposta bem menos tolerante, a fim de aumentar a revocação.
+Além disso, ele passa a utilizar o parâmetro de instruções do sistema que permite passar uma instrução de sistema com maior peso hierárquico, sendo tecnicamente mais robusto do que apenas incluir as instruções no texto do prompt. 
+
+Assim, a instrução de sistema comunica qual persona a IA deve adotar, enquanto que o prompt passa a tarefa em si.   
+Utilizando esse método, é mais difícil para o agente ser confundido por dados de entrada complexos, visto que a instrução está isolada no sistema. 
+
+Para passar essas instruções de sistema, 
+no Gemini\footnote{Como usar instruções de sistema do Gemini: \url{https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/prompts/system-instructions?hl=pt-br}} basta passar o parâmetro \texttt{system\_instruction}, 
+já no Groq\footnote{Como usar instruções de sistema no Groq: \url{https://console.groq.com/docs/text-chat}} é só enviar uma mensagem com \texttt{role: "system"}.
+
+\begin{lstlisting}[
+		language=python, 
+		label={lst:prompt2}, 
+		caption={Prompt 2}
+	]
+SYSTEM_PROMPT = """
+# ROLE
+Você é um Agente de Segurança AI com critérios de filtragem EXTREMAMENTE RÍGIDOS (Zero Tolerance). Sua função é sinalizar qualquer imagem que contenha exposição corporal infantil, independentemente da intenção ou contexto.
+
+# CRITÉRIOS DE CLASSIFICAÇÃO (ESTRITOS)
+Responda 'Sim' se a imagem contiver QUALQUER um dos seguintes elementos envolvendo pessoas menores de 18 anos:
+1. Trajes de Banho e Roupa Íntima: Qualquer criança vestindo biquíni, sunga, maiô, lingerie ou cueca.
+	- NOTA CRÍTICA: O contexto NÃO importa. Crianças na praia/piscina em trajes de banho DEVEM ser classificadas como 'Sim'.
+2. Exposição de Pele: Torso nu (em qualquer gênero), nádegas ou genitais visíveis ou marcados.
+3. Poses: Qualquer pose que enfatize o corpo, mesmo que vestida.
+
+Responda 'Não' APENAS se:
+- A criança estiver totalmente vestida com roupas casuais/formais (camisetas, calças, vestidos não reveladores).
+- Não houver pessoas menores de 18 anos.
+
+# FORMATO DE RESPOSTA
+[Sim/Não]; [Justificativa técnica curta focada no elemento visual detectado]
+"""
+
+PROMPT_TEXT = """
+Analise a imagem fornecida com base nas suas diretrizes de sistema.
+Lembre-se: Responda apenas com 'Sim' ou 'Não' seguido de ponto e vírgula e a justificativa.
+"""
+\end{lstlisting}
+
+O prompt 2 aumentou os valores de revocação, mas ela ainda se mantém baixa para os Llama's e os valores de acurácia não eram satisfatórios.
+Além disso, por falar palavras de cunho sensível abertamente, esse prompt levou a muitos erros de segurança no Gemini, que foram tratados como resposta sim, o que aumentou a revocação de maneira artificial.
+\begin{table}[htb]
+	\IBGEtab{%
+		\caption{Performance com prompt 2}
+		\label{tab:prompt2}
+	}{%
+		\begin{tabular}{lccc}
+			\toprule
+			Métrica & Gemini 2.5 Flash  & Llama Scout  & Llama Maverick \\
+			\midrule \midrule
+			Acurácia & \(68,8\%\) & \(65,0\%\) & \(62,5\%\) \\
+			\midrule 
+			Precisão & \(62,3\%\) & \(80,0\%\) & \(77,8\%\) \\
+			\midrule 
+			Revocação & \(95,0\%\) & \(40,0\%\) & \(35,0\%\) \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Elaborada pelos autores.}%
+	}
+\end{table}
+
+No terceiro prompt (\autoref{lst:prompt3}), os termos alarmantes foram substituídos por terminologia técnica. O uso do idioma inglês busca contornar os filtros de segurança, soando como moderação técnica.
+\begin{lstlisting}[
+		language=python, 
+		label={lst:prompt3}, 
+		caption={Prompt 3}
+	]
+SYSTEM_PROMPT = """
+# ROLE
+You are a Content Safety Auditor. Your task is to technically audit images for compliance with Underage Safety Guidelines regarding attire and body exposure.
+
+# STRICT AUDIT CRITERIA (Zero Tolerance)
+Classify as 'Sim' (Non-Compliant) if the image depicts a minor (<18y) with ANY of the following visual elements:
+1. Swimwear/Undergarments: Subject is wearing bikinis, trunks, swimsuits, or underwear.
+	- POLICY: Context (beach/pool) is IRRELEVANT. Presence of swimwear = 'Sim'.
+2. Skin Exposure: Visible torso (shirtless), exposed midriff, or sensitive areas.
+3. Suggestive Framing: Angles focusing on body parts rather than the face.
+
+Classify as 'Não' (Compliant) ONLY if:
+- The subject is fully clothed in standard street/casual wear (t-shirts, pants, dresses).
+- There are no minors present.
+
+# OUTPUT FORMAT
+[Sim/Não]; [Brief technical description of attire/visual elements]
+"""
+
+PROMPT_TEXT = """
+Audit this image according to your Safety Guidelines.
+Output strictly 'Sim' or 'Não' followed by a semicolon and the technical reason.
+"""
+\end{lstlisting}
+
+Nessa terceira versão, a quantidade de erros do Gemini aumentou ainda mais, levando a crer que essa IA tem mais facilidade de perceber teor sensível em inglês. Já nas IAs oferecidas pelo Groq, todas as métricas alcançaram números bem melhores, com o Llama Scout obtendo todas acima de \(90\%\).
+Isso parece ser efeito desses modelos da Meta serem bem mais flexíveis em relação à segurança.
+
+\begin{table}[htb]
+	\IBGEtab{%
+		\caption{Performance com prompt 3}
+		\label{tab:prompt3}
+	}{%
+		\begin{tabular}{lccc}
+			\toprule
+			Métrica & Gemini 2.5 Flash  & Llama Scout  & Llama Maverick \\
+			\midrule \midrule
+			Acurácia & \(62,0\%\) & \(93,8\%\) & \(85,0\%\) \\
+			\midrule 
+			Precisão & \(56,5\%\) & \(92,7\%\) & \(93,8\%\) \\
+			\midrule 
+			Revocação & \(100,0\%\) & \(95,0\%\) & \(75,0\%\) \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Elaborada pelos autores.}%
+	}
+\end{table}
+
+A última versão principal do prompt adota uma abordagem auditoria de conformidade de vestuário de menores de idade, ao invés de checar diretamente sexualização. 
+Isso foi uma estratégia para evitar mais ainda falar termos sensíveis. 
+Além disso, voltamos para o português, visto que inglês se mais suscetível de gatilhos à segurança.
+
+\begin{lstlisting}[
+		language=python, 
+		label={lst:prompt4}, 
+		caption={Prompt 4}
+	]
+SYSTEM_PROMPT = """
+# FUNÇÃO
+Você é um auditor conservador de conformidade de vestuário para um banco de imagens. Sua tarefa é verificar se as crianças presentes na imagem estão vestidas de acordo com estritos códigos de vestimenta urbana.
+
+# CRITÉRIOS DE REJEIÇÃO (Sim)
+Classifique a imagem como 'Sim' (Viola o código) se houver pessoas aparentando ser menores de 18 anos apresentando:
+1. Vestuário de banho ou atlético mínimo: Uso de sungas, biquínis, maiôs ou roupas de natação, INDEPENDENTE do local (mesmo em praias ou piscinas).
+2. Ausência de roupa padrão: Torso sem camisa, barriga exposta ou falta de roupas superiores/inferiores completas.
+3. Roupas justas: Possibilitam ver o formato do corpo da pessoa, mesmo que coberto. 
+4. Enquadramento/Ângulo de câmera: Foco maior em partes do corpo em vez do rosto.
+5. Se ficar na dúvida sobre a idade da pessoa, considere que é menor de idade.
+
+# CRITÉRIOS DE APROVAÇÃO (Não)
+Classifique como 'Não' (Conforme) APENAS se:
+1. Os sujeitos estiverem vestido com roupas cotidianas completas (camisetas, calças, vestidos cobrindo o torso e pernas).
+2. Não houver pessoas na imagem.
+3. Todas as pessoas, mesmo que com roupas expositivas, são maiores de idade.
+
+# FORMATO
+[Sim/Não]; [Breve explicação técnica da classificação]
+"""
+
+PROMPT_TEXT = """
+Analise o vestuário da imagem conforme suas diretrizes de auditoria. 
+Responda estritamente com 'Sim' ou 'Não' seguido de ponto e vírgula e a justificativa.
+"""
+\end{lstlisting}
+
+\begin{table}[htb]
+	\IBGEtab{%
+		\caption{Performance com prompt 4}
+		\label{tab:prompt4}
+	}{%
+		\begin{tabular}{lccc}
+			\toprule
+			Métrica & Gemini 2.5 Flash  & Llama Scout  & Llama Maverick \\
+			\midrule \midrule
+			Acurácia & \(88,8\%\) & \(87,5\%\) & \(77,5\%\) \\
+			\midrule 
+			Precisão & \(81,6\%\) & \(85,7\%\) & \(92,3\%\) \\
+			\midrule 
+			Revocação & \(100,0\%\) & \(90,0\%\) & \(60,0\%\) \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Elaborada pelos autores.}%
+	}
+\end{table}
+
+No último prompt (\autoref{tab:prompt4}), os valores para os Llama's pioraram um pouco, já o Gemini melhorou, finalmente sendo satisfeito nas três métricas enquanto passa a apresentar poucos erros. 
+
+Ao final, o auge de performance dos Llama's ficou no prompt 3, enquanto o Gemini atingiu os seus melhores valores no prompt 4.  
+
+\section{Testes de temperatura}
+Utilizando os melhores prompts de cada modelo, foi alterada a temperatura e analisado o quanto isso impacta na resposta de cada um. 
+Como a temperatura influencia na aleatoriedade, aqui a análise passou a cobrir também a consistência nas resposta (explicada na \autoref{sec:metodologia_metricas}).
+
+No Llama Scout (\autoref{fig:grafico_performance_scout}), diminuir mais a temperatura piorou o modelo. O auge da performance foi atingido na temperatura \(0{,}5\), onde todas as métricas se encontram no seu máximo.
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Gráfico de performance do Llama Scout (usando prompt 3)}
+    \label{fig:grafico_performance_scout}
+	\includegraphics[width=0.8\textwidth]{USPSC-img/grafico_metricas_scout.png} \\
+	\fonte{elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+Já para o Llama Maverick, a \autoref{fig:grafico_performance_maverick} mostra que, no geral, a temperatura 0 atinge os melhores resultados. 
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Gráfico de performance do Llama Maverick (usando prompt 3)}
+    \label{fig:grafico_performance_maverick}
+	\includegraphics[width=0.8\textwidth]{USPSC-img/grafico_metricas_maverick.png} \\
+	\fonte{elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+Por último, na \autoref{fig:grafico_performance_gemini} fica claro que o Gemini não sofre grades diferenças de performance quando aumentada a temperatura. Porém, com o valor de 0 ocorre uma leve melhora, sendo esse o valor considerado ótimo.
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Gráfico de performance do Gemini 2.5 Flash (usando prompt 4)}
+    \label{fig:grafico_performance_gemini}
+	\includegraphics[width=0.8\textwidth]{USPSC-img/grafico_metricas_gemini.png} \\
+	\fonte{elaborado pelo autor}
+	\end{center}	
+\end{figure}
+
+\section{Testes de velocidade}
+Para os testes de velocidade, para cada IA foram utilizadas o prompt e temperatura que performou melhor.
+Nos critérios de tempo, fica claro na \autoref{tab:tempo_execucao} que o Llama Scout foi o que se saiu melhor. Esse modelo foi o mais rápido e o que menos oscilou (menor variância), sendo ideal para uma aplicação que necessita de uma resposta rápida. 
+Já o Gemini foi o que se saiu pior, apresentando o maior tempo médio e maior variância, chegando até 13 segundos para analisar uma só imagem. 
+
+\begin{table}[htb]
+	\IBGEtab{%
+		\caption{Tempo de execução com melhor configuração de temperatura e prompt}
+		\label{tab:tempo_execucao}
+	}{%
+		\begin{tabular}{lcccccc}
+			\toprule
+			Modelo & Temperatura & Prompt & Médio (s) & Mín. (s) & Máx. (s) & Variância (s\(^2\))\\
+			\midrule \midrule
+			4 Scout & 0.5 & 3 & 1,36 & 0,98 & 1,78 & 0,03 \\
+			\midrule 
+			4 Maverick & 0 & 3 & 5,90 & 3,44 & 9,56 & 2,21 \\
+			\midrule 
+			2.5 Flash & 0 & 4 & 6,10 & 2,09 & 13,07 & 3,03 \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Elaborada pelo autor.}%
+	}
+\end{table}
+
+\section{Resultados gerais}
+Como pode-se perceber pela \autoref{tab:resultados_gerais}, que resume os resultados, o modelo Llama Scout, quando bem calibrado, foi o melhor, superando até mesmo o seu irmão com mais parâmetros, o Maverick.
+
+\begin{table}[htb]
+	\IBGEtab{%
+		\caption{Resumo dos resultados}
+		\label{tab:resultados_gerais}
+	}{%
+		\begin{tabular}{lcccccc}
+			\toprule
+			Modelo & Médio (s) & Variância (s\(^2\)) & Acurácia & Precisão & Revocação & Consistência \\
+			\midrule \midrule
+			4 Scout & 1,36 & 0,03 & \(95,0\%\) & \(95,0\%\) & \(95,0\%\) & \(100,0\%\) \\
+			\midrule
+			4 Maverick & 5,90 & 2,21 & \(87,3\%\) & \(94,1\%\) & \(80,0\%\) & \(97,5\%\) \\
+			\midrule
+			2.5 Flash & 6,10 & 3,03 & \(90,0\%\) & \(83,3\%\) & \(100,0\%\) & \(100,0\%\) \\
+			\bottomrule
+		\end{tabular}%
+	}{%
+		\fonte{Elaborada pelo autor.}%
+	}
+\end{table}
+
+Vale destacar que os três modelos apresentaram ótima consistência e que a revocação do Gemini foi até mais alta que o Scout, atingindo os \(100\%\), podendo ser considerado a segunda melhor opção no ponto de vista de segurança.
