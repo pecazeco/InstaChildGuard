@@ -4,7 +4,6 @@ code/node_modules/
 code/tests/img_tests/
 code/tests/optimized_images/
 code/config.js
-tcc/
 *.aux
 *.bbl
 *.blg
@@ -21,4 +20,3 @@ tcc/
 *.fls
 *.ilg
 *.fdb_latexmk
-tese/**/*.pdf
