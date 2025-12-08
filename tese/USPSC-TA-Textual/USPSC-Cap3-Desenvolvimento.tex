@@ -464,14 +464,16 @@ try:
     contem_pessoa = parts[0].strip()
     justificativa = parts[1].strip() if len(parts) > 1 else "Sem justificativa"
     gabarito = 'Sim' if filename.lower().startswith('sim') else 'Não'
+    acertou = 'VERDADEIRO' if contem_pessoa == gabarito else 'FALSO'
     
     results_list.append({
         'NomeDoArquivo': filename,
         'Gabarito': gabarito,
-        'ContemSexualizacao': contem_pessoa,
+        'ContemSexualizacao': contem_sexualizacao,
         'Descricao': justificativa,
-        'RespostaBruta': api_response,
-        'ResponseTime(s)': f"{response_time:.2f}",      
+        'ResponseTime(s)': f"{response_time:.2f}",
+        'Acertou' : acertou,
+        'RespostaBruta': api_response
     })
 \end{lstlisting}
 
