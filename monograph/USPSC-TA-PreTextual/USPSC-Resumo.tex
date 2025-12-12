@@ -1,0 +1,22 @@
+%!TEX root = tese/main.tex
+%% USPSC-Resumo.tex
+\setlength{\absparsep}{18pt} % ajusta o espaçamento dos parágrafos do resumo		
+\begin{resumo}
+	\begin{flushleft} 
+			\setlength{\absparsep}{0pt} % ajusta o espaçamento da referência	
+			\SingleSpacing 
+			\imprimirautorabr~~\textbf{\imprimirtituloresumo}.	\imprimirdata. \pageref{LastPage} p. 
+			%Substitua p. por f. quando utilizar oneside em \documentclass
+			%\pageref{LastPage} f.
+			\imprimirtipotrabalho~-~\imprimirinstituicao, \imprimirlocal, \imprimirdata. 
+ 	\end{flushleft}
+\OnehalfSpacing 			
+O presente trabalho aborda a crescente problemática da ``adultização'' e sexualização de menores nas redes sociais, impulsionada pela busca por engajamento e monetização. 
+O objetivo principal foi desenvolver uma prova de conceito de uma extensão para navegadores web, utilizando a arquitetura Manifest V3, capaz de identificar e ocultar automaticamente conteúdos sexualizados envolvendo crianças na plataforma Instagram. 
+A metodologia baseou-se na integração de modelos de linguagem multimodais (LLMs) via API REST, especificamente testando o Gemini 2.5 Flash e as variantes do Llama 4 (Scout e Maverick), para a análise das postagens. 
+Foram realizados testes sistemáticos de engenharia de prompt e temperatura para otimizar a acurácia e a revocação da detecção. 
+Os resultados demonstraram que o modelo Llama 4 Scout apresentou o melhor desempenho, atingindo 95\% de acurácia com um tempo médio de resposta inferior a 1,5 segundos. 
+Conclui-se que a utilização de agentes multimodais é tecnicamente viável e eficaz para mitigar a exposição a conteúdos impróprios, oferecendo uma ferramenta proativa para a segurança digital de menores.
+
+ \textbf{Palavras-chave}: Inteligência Artificial. Web Development. Redes sociais. Sexualização infantil. Extensão de navegador. LLMs Multimodais. 
+\end{resumo}

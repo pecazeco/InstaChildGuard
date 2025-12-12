@@ -131,8 +131,8 @@
 
     const elapsedTime = Date.now() - startTime;
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    if (elapsedTime < 7000) {
-      await delay(7000 - elapsedTime);
+    if (elapsedTime < 10000) {
+      await delay(10000 - elapsedTime);
       return;
     }
   };

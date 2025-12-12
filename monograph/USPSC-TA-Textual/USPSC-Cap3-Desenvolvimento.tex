@@ -1,0 +1,499 @@
+%!TEX root = tese/main.tex
+\chapter{Desenvolvimento} \label{chap:desenvolvimento}
+
+\section{Metodologia} \label{sec:metodologia}
+
+No decorrer dessa seção serão definidas as ferramentas utilizadas para implementação do projeto em si e dos testes realizados.
+
+\subsection{Manifest V3} \label{sec:manifest_v3}
+Extensões de navegador são pequenos módulos de \textit{software} que personalizam um navegador da web. 
+Os navegadores normalmente permitem uma variedade de extensões, incluindo modificações na interface do usuário, gerenciamento de \textit{cookies}, bloqueio de anúncios e scripts e estilos personalizados de páginas da web.
+
+O Manifest V3\footnote{Mudanças do Manifest V3: \url{https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3?hl=pt-br}} (em referência ao arquivo de manifesto contido nas extensões) é a mais recente grande versão da API de extensões do Chrome
+e visa modernizar a arquitetura de extensões e melhorar a segurança e o desempenho do navegador.
+Ele adota APIs declarativas para diminuir a necessidade de acesso excessivamente amplo e permitir uma implementação mais eficiente, 
+substitui páginas de fundo por ``Service Workers'' com recursos limitados para reduzir o uso de recursos e proíbe código hospedado remotamente. 
+
+A escolha de uso do Manifest V3 se dá pois muitos navegadores suportam essa API.
+Basicamente, todos os baseados no projeto Chromium são compatíveis, como Brave, Microsoft Edge, Opera, Vivaldi 
+e, claro, o Google Chrome. Isso torna o uso dessa API bastante recomendada.
+
+Para desenvolver uma extensão usando Manifest V3, é necessário criar um manifesto (\texttt{manifest.json}), 
+arquivo que lista uma série de informações básicas sobre a extensão, e o navegador o usa realizar as configurações necessárias.
+O \autoref{cap:apendice_manifest} contém o manifesto elaborado para o projeto, e inclui 
+a versão do Manifest, o nome da extensão, a sua descrição, os caminhos para os códigos utilizados, as permissões necessárias, os arquivos das imagens utilizadas e outras informações.
+
+Para esse extensão, os componentes mais importantes são o ``content script'' (\texttt{contentScript.js}) e o ``background service worker'' (\texttt{background.js}).
+O content script é a parte da extensão que consegue conversar diretamente com o DOM (\textit{Document Object Model}) da página que o navegador está acessando,
+que é basicamente a estrutura em si do site, ou seja, tudo o que o usuário vê.
+O content script não é capaz de receber as permissões mais elevadas requisitadas no manifesto, 
+para isso, ele precisa enviar uma mensagem para o background service worker, que possui esse privilégio e o retorna com a informação solicitada.
+Toda essa aparente complicação a mais garante a segurança da extensão \cite{extensionvulnerabilities2010}.
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Arquitetura completa de uma extensão}
+    \label{fig:extensions_arquitetura}
+	\includegraphics[width=0.8\textwidth]{USPSC-img/extensions-architecture.png} \\
+	\fonte{\url{https://youtu.be/TRwYaZPJ0h8?si=2gh3gnVSlcj5LRXF&t=194}}
+	\end{center}	
+\end{figure}
+
+\subsection{Uso das APIs} \label{sec:metodologia_uso_apis}
+
+Um exemplo de chamada das APIs REST utilizadas por meio de cURL pode ser visto no \autoref{cap:apendice_doc_apis}.
+As chamadas foram adaptadas para o uso em JavaScript, utilizando a função \texttt{fetch()}, que é nativa da linguagem e permite fazer requisições HTTP assíncronas.
+
+\subsection{Etapas de testes} \label{sec:metodologia_etapas_testes}
+Os passos da metodologia adotada para a realização dos testes, respectivos motivos das decisões tomadas e observações foram as seguintes:
+
+\begin{enumerate}
+	\item Criação de uma conta alternativa no Instagram
+	\begin{itemize}
+		\item Visando utilizar um algoritmo limpo, sem interferências de histórico ou preferências pessoais.
+		\item Buscando não contaminar do perfil original do autor.
+	\end{itemize}
+	\item Diminuir o controle de conteúdo sensível nas configurações\footnote{Configuração de controle de conteúso sensível: \url{https://about.instagram.com/blog/announcements/introducing-sensitive-content-control}} da conta.
+	\item Identificar e seguir perfis buscando por palavras chave relacionadas a crianças e a sexualização.
+	\begin{itemize}
+		\item Perfis que possuem na ``bio'' avisos falando que o perfil é monitorado por pais indicam que se trata possivelmente de uma criança.
+		\item O Instagram restringe a busca por termos relacionados a sexualização de crianças diretamente (\autoref{fig:aviso_abuso}), logo, é necessário buscar os termos de sexualização e de crianças separadamente.
+	\end{itemize}
+	\item Navegar pelo feed e curtir e abrir comentários das postagens que tem algum tipo de sugestão sexual de crianças.
+	\item Extrair (fazer download) de imagens que aparecerem no feed, avaliando manualmente se contém ou não sexualização infantil.
+	\begin{itemize}
+		\item Baixar 20 sendo imagens que contenham sexualização de crianças e 20 sendo imagens que não contenham, para ter resultados não enviesados.
+	\end{itemize}
+	\item Rodar script Python (\autoref{sec:script_testes}) desenvolvido para avaliar as imagens baixadas utilizando o mesmo prompt utilizado na extensão.
+	\begin{itemize}
+		\item Utilizar scripts possibilita testes sistemáticos, garantindo que os testes serão realizados sempre sobre as mesmas imagens e de maneira mais ágil do que ficar navegando no feed e anotando os resultados.
+		\item Nesses testes, são extraídas métricas de performance de cada modelo, como tempo médio de requisição, precisão e acurácia.
+	\end{itemize}
+	\item Realizar adaptações no prompt do modelo buscando a maior acurácia possível.
+	\item Repetir os últimos 2 passos até alcançar um resultado satisfatório. 
+	\item Testar alguns valores de temperatura para cada modelo e rodar novamente os testes até alcançar o melhor valor para cada um.
+	\item Substituir o conjunto do melhor API + modelo + prompt + temperatura no código da extensão JavaScript.
+\end{enumerate}
+
+\begin{figure}[htb]
+	\begin{center}
+	\caption{Aviso de abuso sexual}
+    \label{fig:aviso_abuso}
+	\includegraphics[width=0.5\textwidth]{USPSC-img/aviso-abuso-sexual.png} \\
+	\fonte{Instagram}
+	\end{center}	
+\end{figure}
+
+\subsection{Métricas de performance calculadas} \label{sec:metodologia_metricas}
+Nos testes, a partir do gabarito de cada imagem, a classificação respondida pelo modelo e o tempo que levou para as respostas, foram calculadas várias métricas relacionadas à performance. 
+
+Assumindo \(TN\): \textit{True Negative}, \(TP\): \textit{True Positive},
+\(FN\): \textit{False Negative} e \(FP\): \textit{False Positive}, temos as seguintes definições:
+\begin{equation}
+   \text{Acurácia} = \frac{TP + TN}{ TP + TN + FP + FN }
+\end{equation}
+\begin{equation}
+   \text{Precisão} = \frac{TP}{ TP + FP }
+\end{equation}
+\begin{equation}
+   \text{Revocação} = \frac{TP}{ TP + FN }
+\end{equation}
+
+No caso desse projeto, procura-se principalmente reduzir o número de falsos negativos (\(FN\)),
+já que, por segurança, é melhor a IA tender a censurar do que não censurar. Assim, prioriza-se o aumento do valor da revocação em relação à precisão, que pode ser traduzida como ``de todos as imagens que deveriam ser classificadas como sim, quantas o modelo acertou?''. 
+
+Para avaliação da velocidade, foram consideradas o tempo médio de requisição, tempo mínimo, tempo máximo, e variância do tempo. Já para análise da consistência das respostas, cada modelo classificou cada imagem 2 vezes, e foi calculado de todas as imagens, qual percentual o modelo retornou a mesma classificação nas duas vezes. 
+
+\subsection{Variação da temperatura}
+
+A temperatura é um parâmetro que controla a aleatoriedade da saída de uma GenAI, balanceando criatividade e coerência.
+Uma temperatura baixa (perto de 0), cria saídas mais previsíveis,  determinísticas e focadas, enquanto que valores altos (perto ou acima de 1), 
+aumentam a aleatoriedade e criatividade.
+
+No caso desse projeto, onde o trabalho é de classificar imagens de maneira binária, são esperadas saídas mais corretas de temperaturas mais baixas. 
+Porém, como existe alguma certa subjetividade na nossa classificação, pode ser que o modelo se beneficie de um aumento na temperatura.
+Visto isso, inicialmente todos os prompts foram testados utilizando a temperatura de \(0{,}1\). Ao final, escolhido o melhor prompt para cada modelo, 
+alterações foram feitas na temperatura buscando o melhor resultado possível.
+
+\section{Código} \label{sec:codigo}
+Em um primeiro momento, a extensão proposta apenas analisa as postagens do Instagram dispostas no ``feed'', 
+e somente as imagens. Não são avaliados os ``stories'' ou vídeos, porém, como o foco aqui é a prova de conceito, 
+abranger esses casos seria uma adaptação de código, pois se o algoritmo funciona bem para a as imagens do feed, 
+é natural também funcionar para os stories ou vídeos. 
+Além disso, o código foi estruturado deixando aberturas para ser adaptado à outras abas do Instagram (reels, stories, explore), 
+o que será explicado na \autoref{sec:content_script}.
+
+A explicação do funcionamento dos códigos desenvolvidos será dividida em quatro partes:
+\textit{content script}, \textit{background service worker}, \textit{frontend}, e os scripts de teste utilizados para validar o funcionamento do \textit{backend}.
+
+Por conta das limitações de privilégio explicada na \autoref{sec:manifest_v3}, o backend é dividido entre o \textit{content script} e o \textit{background service worker}. 
+Já o frontend tem seus estilos definidos em um arquivo CSS (\autoref{cap:apendice_css}) e é injetado através do \textit{content script}, que insere código HTML na página do Instagram.
+
+Os trechos de códigos dispostos nessa seção foram resumidos, prezando pela clareza e objetividade. 
+Mas vale enfatizar que, como já disponibilizado na \autoref{sec:escopo_do_projeto}, o código-fonte completo do projeto está disponível em um repositório público no GitHub.
+Partes omitidas aqui incluem variáveis de configuração, funções auxiliares e trechos intermediários do código, impressões de \texttt{console.log()} para depuração, tratamentos de erro e demais partes dispensáveis para o entendimento do funcionamento geral.
+
+\subsection{\textit{Background service worker}} \label{sec:background}
+
+A primeira função do \texttt{background.js} é identificar quando a página atualizou e enviar uma mensagem para o content script contendo a localização atual (feed, stories, reels, explore, por exemplo) e solicitando que ele cheque quais as postagens que já estão na página. Essa função pode ser vista no \autoref{lst:background_onUpdated}.
+
+\begin{lstlisting}[ 
+		label={lst:background_onUpdated}, 
+		caption={Avisa quando a página atualizou}
+	]
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  console.log("background.js: Pagina atualizou.");
+
+  if (
+    changeInfo.status === "complete" &&
+    tab.url &&
+    tab.url.includes("https://www.instagram.com")
+  ) {
+    // estamos no instagram
+    let location = tab.url.split("instagram.com/")[1];
+    if (location) {
+      location = location.split("/")[0]; // pegar a primeira palavra
+    } else {
+      location = ""; // Estamos no feed principal
+    }
+    console.log("background.js: Enviando localização:", location);
+    chrome.tabs.sendMessage(tabId, location);
+  }
+});
+\end{lstlisting}
+
+Outro papel do background é receber as URLs das imagens que o content script identificou na página e fazer a chamada para a API de geração de texto, retornando a decisão de censura para o content script.
+O recebimento das URLs é feito pelo ouvinte de mensagens (\autoref{lst:background_onMessage}).
+
+\begin{lstlisting}[ 
+		label={lst:background_onMessage}, 
+		caption={Ouvinte de mensagens no background}
+	]
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "ANALYZE_IMAGE_URL") {
+    // Chama a função de análise, passando a URL
+    performImageAnalysis(request.url)
+      .then((status) => {
+        sendResponse({ status: status });
+      })
+      .catch((error) => {
+        console.error("background.js: Erro no performImageAnalysis:", error);
+        sendResponse({ status: 2 });
+      });
+
+    return true;
+  }
+});
+\end{lstlisting}
+
+A chamada à API é feita pelo background pois se a chave de API ficasse no content script, ela ficaria visível em texto puro para qualquer pessoa que inspecionasse o código da página, assim, a recomendação importar a chave no background, onde ela fica em um processo separado e isolado, longe dos olhos do usuário comum.
+
+\begin{lstlisting}[ 
+		label={lst:background_performImageAnalysis}, 
+		caption={\texttt{performImageAnalysis()}}
+	]
+async function performImageAnalysis(imageURL, provider) {
+  try {
+    // 1. Converte a URL da imagem para base64
+    const imageParts = await resizeImageAndConvertToBase64(imageURL, 768, 0.8);
+
+    // 2. Chama a função genérica de API
+    const responseText = await callAIProvider(
+      provider, // "google" ou "groq"
+      imageParts, // base64 da imagem
+      SYSTEM_PROMPT // prompt de entrada do modelo
+    );
+
+    // 3. Verifica resposta para decidir censura
+    const shouldCensor = responseText.trim().toLowerCase().startsWith("sim");
+    return shouldCensor ? 1 : 0;
+  } catch (error) {
+    console.error("background.js: Erro crítico na análise:", error);
+    return 2; // erro
+  }
+}
+\end{lstlisting}
+
+O  \texttt{performImageAnalysis()} (resumido em \autoref{lst:background_performImageAnalysis}) realiza 3 etapas: 
+redimensiona a imagem e a converte para base64; 
+chama uma função genérica que faz a requisição para a API escolhida (Google ou Groq);
+faz uma lógica simples a partir da resposta para decidir se a imagem deve ser censurada ou não, retornando 0 (não censurar), 1 (censurar) ou 2 (erro) para o content script.
+
+O redimensionamento se dá a fim de economizar tokens, limitando uma largura máxima de 768 pixels e convertida para base64 com qualidade de 80\% antes de ser enviada para a API.
+
+A função \texttt{callAIProvider()} monta a requisição para a API escolhida da maneira correta, considerando os detalhes de cada uma, como o endpoint, o formato do corpo da requisição e o cabeçalho de autenticação, considerando a documentação citada na \autoref{sec:metodologia_uso_apis}.
+Além disso, ela também trata a resposta, padronizando o retorno para o formato de texto puro, que é utilizado na etapa seguinte de lógica de decisão de censura.
+
+\subsection{\textit{Content script}} \label{sec:content_script}
+
+Assim que o background avisa que a página atualizou, o content script ouve a mensagem (\autoref{lst:content_onMessage}) e inicia a verificação das postagens presentes na página.
+
+\begin{lstlisting}[ 
+		label={lst:content_onMessage}, 
+		caption={Ouve que a página atualizou e checa as primeiras postagens}
+	]
+chrome.runtime.onMessage.addListener((message) => {
+  location = message;
+  checkEachPost(document, location);
+});
+\end{lstlisting}
+
+A função \texttt{checkEachPost()} (\autoref{lst:checkEachPost}) procura os elementos HTML correspondentes às postagens dentro de um nó fornecido. 
+Quando ele recebe a informação que a página atualizou, essa função busca pelos elementos na página inteira (nó \texttt{document}), e chama a função \texttt{checkElement()} para cada uma deles.
+
+Por observação do DOM do Instagram, foi possível identificar que as postagens do feed atualmente podem ser rastreadas pelos elementos da tag \texttt{img} que possuem o atributo \texttt{alt} iniciado por ``Photo by'' ou ``Photo shared by''. 
+É difícil encontrar uma forma mais robusta de identificar as postagens, pois o Instagram utiliza algum framework (como o React) que cria IDs e classes dinâmicas e aleatórias, sendo sequências de caracteres como ``\texttt{hcwsLGnMz092209zkAIok0llLz09aLAuU}'' que podem mudar a qualquer momento.
+
+\begin{lstlisting}[
+    label={lst:checkEachPost},
+    caption={Função que checa primeiras postagens da página}
+  ]
+const checkEachPost = (node, location) => {
+  switch (location) {
+    case "": // feed
+      // Pega os filhos desse nó que sao posts
+      let posts = [
+        ...node.querySelectorAll('img[alt^="Photo by"]'),
+        ...node.querySelectorAll('img[alt^="Photo shared by"]'),
+      ];
+      // checa cada post se deve censurar
+      posts.forEach((img) => checkElement(img, location));
+      break;
+
+    case "stories":
+      break;
+
+    case "reels":
+      break;
+
+    case "explore":
+      break;
+
+    default: // não sabemos onde estamos
+      break;
+  }
+};
+\end{lstlisting}
+
+A função de checar as postagens iniciais foi estruturada em um \texttt{switch} para facilitar a expansão para outras abas do Instagram, como stories, reels e explore, buscando uma certa flexibilidade no código.
+Como já dito, atualmente apenas o feed está implementado, mas as outras abas podem ser adicionadas futuramente.
+
+Dentro da função \texttt{checkElement()} (\autoref{lst:checkElement}), é verificado se o elemento já foi analisado anteriormente (para evitar análises repetidas), é esperada a imagem estar completamente carregada, e então a função \texttt{processImage()} é chamada para analisar a imagem da postagem. 
+Caso um erro de carregamento ocorra, a função \texttt{showError()} é chamada para exibir um aviso visual na postagem, o que vai ser explicado na \autoref{sec:frontend}.
+
+\begin{lstlisting}[
+  label = {lst:checkElement},
+  caption = {Função que checa se o elemento já foi analisado, espera o carregamento e chama a análise}
+]
+const checkElement = (img, location) => {
+  // Evita processar a mesma imagem múltiplas vezes
+  if (img.dataset.analysisState) {
+    return;
+  }
+
+  // Marca a imagem como "analisando" 
+  img.dataset.analysisState = "pending";
+  console.log("Observado:", img);
+
+  // 'complete' = o browser terminou de carregar
+  // 'currentSrc' = tem uma fonte de imagem válida
+  if (img.complete && img.currentSrc) {
+    console.log(
+      "Imagem já carregada, processando imediatamente:",
+      img.currentSrc
+    );
+    processImage(img, location); // Processa agora
+  } else {
+    const onLoad = () => {
+      processImage(img, location);
+      // Limpa os ouvintes
+      img.removeEventListener("load", onLoad);
+      img.removeEventListener("error", onError);
+    };
+
+    const onError = () => {
+      console.error(
+        "Erro ao carregar imagem no DOM (src pode estar inválido):",
+        img.src
+      );
+      img.dataset.analysisState = "error";
+      showError(img, location); // Mostra o erro visual
+      // Limpa os ouvintes
+      img.removeEventListener("load", onLoad);
+      img.removeEventListener("error", onError);
+    };
+
+    img.addEventListener("load", onLoad);
+    img.addEventListener("error", onError);
+  }
+};
+\end{lstlisting}
+
+A função \texttt{processImage()} (\autoref{lst:processImage}) envia a URL da imagem para a função responsável por chamar o background (\texttt{checkIfAdultization()}), que faz a análise e retorna a decisão de censura. 
+Ela também é responsável por chamar as funções que montam o frontend, 
+ativando o visual de carregamento enquanto a análise está em andamento,
+e, ao fim, o removendo e mostrando o resultado (censura, selo de verificação ou erro). 
+
+\begin{lstlisting}[
+  label={lst:processImage},
+  caption={Função resumida que envia a imagem para análise e monta o frontend}
+]
+const processImage = async (img, location) => {
+  /* ... etapas intermediárias ... */
+
+  showAnalysing(img, location); // Frontend de carregamento
+  const response = await checkIfAdultization(imageUrl);
+  removeAnalysing(img, location); // Remove frontend de carregamento
+  switch (response) { // Mostra o resultado
+    case 0:
+      showChecked(img, location);
+      break;
+    case 1:
+      showCensored(img, location);
+      break;
+    case 2:
+      showError(img, location);
+      break;
+    default:
+      break;
+  }
+
+  const elapsedTime = Date.now() - startTime;
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // Garante tempo mínimo de 7 segundos
+  if (elapsedTime < 7000) {
+    await delay(7000 - elapsedTime);
+    return;
+  }
+\end{lstlisting}
+
+A \texttt{processImage()} possui uma lógica que garante um tempo mínimo para cada análise, implementado a fim de não ultrapassar o limite de requisições por minuto. 
+Esse tempo foi ajustado dependendo do modelo testado, por exemplo, o limite de 10 RPM do Gemini 2.5 Flash pode ser respeitado com um tempo mínimo de 7 segundos por análise.
+
+A função \texttt{checkIfAdultization()} envia a mensagem para o background, que a ouve (\autoref{lst:background_onMessage}), faz a análise e retorna a decisão de censura, como já explicado na \autoref{sec:background}.
+
+Além de checar as postagens dispostas inicialmente, o content script também observa mudanças no DOM da página, percebendo quando novos nós são carregados ao rolar a página para baixo.
+Quando ele identifica esses novos elementos, chama a função \texttt{checkEachPost()} para verificar se há novas postagens a serem analisadas (\autoref{lst:mutationObserver}).
+Nesse momento, ao invés de passar o nó \texttt{document} para a função \texttt{checkEachPost()} (como foi feito em \autoref{lst:content_onMessage}), passa-se apenas os nós que foram adicionados, otimizando o processo.
+
+\begin{lstlisting}[
+  label={lst:mutationObserver},
+  caption={Observador de mutações que checa novos posts carregados}
+]
+const observer = new MutationObserver((mutations) => {
+  // itera sob cada mutação da pagina
+  mutations.forEach((mutation) => {
+    // se a mutação é sobre a lista de filhos da pagina e o numero é positivo (foram adicionados nós)
+    if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+      // itera sobre cada nó adicionado
+      mutation.addedNodes.forEach((node) => {
+        // Verifica se o nó adicionado é um elemento HTML
+        if (node.nodeType === 1) {
+          checkEachPost(node, location); // checa os posts dentro desse nó
+        }
+      });
+    }
+  });
+});
+\end{lstlisting}
+
+\subsection{Frontend} \label{sec:frontend}
+
+As funções do content script que injetam o frontend na página do Instagram são \texttt{showAnalysing()} (\autoref{lst:showAnalysing}), \texttt{removeAnalysing()}, \texttt{showCensored()}, \texttt{showChecked()} e \texttt{showError()}.
+Como todas essas funções têm uma lógica relativamente parecida, utiliza-se aqui a \texttt{showAnalysing()} como exemplo, que é responsável por inserir o visual de carregamento na postagem que está sendo analisada.
+
+\begin{lstlisting}[
+  label={lst:showAnalysing},
+  caption={Função que insere o frontend de carregamento na postagem}
+]
+const showAnalysing = (element, location) => {
+  /* ... etapas intermediárias ... */
+
+  // Aplica um blur inicial
+  element.style.filter = "blur(10px)";
+  // Cria o container principal para o loading
+  const analysingContainer = document.createElement("div");
+  analysingContainer.className = "analysing-container";
+  // Cria o GIF de loading
+  const loadingGif = document.createElement("img");
+  loadingGif.src = chrome.runtime.getURL("images/loading.gif");
+  loadingGif.className = "analysing-gif";
+  // Cria o texto "Analisando..."
+  const analysingText = document.createElement("div");
+  analysingText.textContent = "Analisando conteúdo...";
+  analysingText.className = "analysing-text";
+  // Monta o visual de análise
+  analysingContainer.appendChild(loadingGif);
+  analysingContainer.appendChild(analysingText);
+  // Adiciona tudo à página
+  parent.appendChild(analysingContainer);
+};
+\end{lstlisting}
+
+As classes CSS utilizadas para estilizar o frontend estão definidas no arquivo \texttt{styles.css} (\autoref{cap:apendice_css}).
+
+\subsection{Script para testes} \label{sec:script_testes}
+
+O script Python desenvolvido para realizar os testes faz as chamadas com base na documentação oficial de ambas as APIs, conforme mostrado no \autoref{cap:apendice_doc_apis}.
+
+O script lê \(N\) vezes todas as imagens de uma pasta específica, faz o mesmo redimensionamento e otimização de imagem que o content script faz,
+e então faz a chamada para a API e modelo escolhidos.
+Após receber a resposta, o script processa o texto retornado e 
+guarda uma lista de informações do resultado. Ao final, as informações sobre todas as imagens são salvas em um arquivo CSV para análise posterior.
+
+O trecho de código responsável por fazer a chamada para a API e processar a resposta pode ser visto no \autoref{lst:chamada_resposta_testes}. 
+Observa-se que a chamada para cada API é feita em funções auxiliares separadas, mas o processamento da resposta é igual para ambas.
+
+\begin{lstlisting}[
+  language=Python,
+  caption={Chamada e processamento da resposta no script de testes},
+  label={lst:chamada_resposta_testes}
+]
+# --- CHAMADA GOOGLE GEMINI ---
+if AI_PROVIDER == "google":
+    api_response = callGoogleAPI(optimized_img)
+    response_time = time.time() - start_time_per_image
+
+# --- CHAMADA GROQ ---
+elif AI_PROVIDER == "groq":
+    api_response = callGroqAPI(optimized_img)
+    response_time = time.time() - start_time_per_image
+
+# --- PROCESSAMENTO DA RESPOSTA (IGUAL PARA AMBOS) ---
+try:
+    parts = api_response.split(';', 1)
+    contem_pessoa = parts[0].strip()
+    justificativa = parts[1].strip() if len(parts) > 1 else "Sem justificativa"
+    gabarito = 'Sim' if filename.lower().startswith('sim') else 'Não'
+    acertou = 'VERDADEIRO' if contem_pessoa == gabarito else 'FALSO'
+    
+    results_list.append({
+        'NomeDoArquivo': filename,
+        'Gabarito': gabarito,
+        'ContemSexualizacao': contem_sexualizacao,
+        'Descricao': justificativa,
+        'ResponseTime(s)': f"{response_time:.2f}",
+        'Acertou' : acertou,
+        'RespostaBruta': api_response
+    })
+\end{lstlisting}
+
+O script também leva em consideração o limite de requisições por minuto de cada modelo testado (\autoref{lst:espera_rpm_testes}),
+forçando esperas entre as chamadas para não ultrapassar o limite.
+Como o limite do Gemini 2.5 Flash é de 10 RPM, o script garante um tempo seguro mínimo de 7 segundos entre cada requisição.
+Já os modelos Llama oferecidos pela Groq possuem limite de 30 RPM, então, para ser conservador, o script garante pelo menos 2.5 segundos entre cada requisição.
+
+\begin{lstlisting}[
+  language=Python,
+  caption={Espera para respeitar limite de requisições por minuto},
+  label={lst:espera_rpm_testes}
+]
+if AI_PROVIDER == 'google':
+    if elapsed_time < 7: 
+        time.sleep(7 - elapsed_time)
+elif AI_PROVIDER == 'groq':
+    if elapsed_time < 2.5:
+        time.sleep(2.5 - elapsed_time)
+\end{lstlisting}
+
+O código lê todas as imagens \(N\) vezes para ser analisada a consistência dos resultados.
+Se o modelo retornar resultados diferentes para a mesma imagem em execuções distintas, isso indica que o prompt ainda não está robusto o suficiente.
