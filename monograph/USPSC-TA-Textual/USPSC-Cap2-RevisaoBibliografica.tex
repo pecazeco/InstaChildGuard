@@ -31,7 +31,6 @@ ou a detecção SafeSearch integrada ao Google Cloud\footnote{SafeSearch: \url{h
 foram treinadas com milhares de imagens e podem analisar a explecitude em relação a diferentes rótulos além de nudez, 
 como violência, drogas ou médico. 
 Além disso, muitos desses modelos podem classificar diferentes níveis de nudez, como apenas algo apenas sugestivo ou totalmete explícito.
-
 Porém, a aplicação desse projeto expõe certas limitações e restrições sobre o uso dessas APIs:
 \begin{itemize}
     \item As postagens do Instagram já passam por um filtro prévio feito por redes neurais convolucionais \cite{mohiuddin2024}, assim conteúdos totalmente explícitos já não irão aparecer.
@@ -79,7 +78,6 @@ e, ao fundo, uma criança passando.
 Nesse exemplo, os dois modelos responderiam ``sim'', apesar de não haver exatamente sexualização infantil.
 Por outro lado, se em uma imagem houverem duas crianças juntas em uma posição sugestiva, 
 se enviarmos ao segundo modelo as duas crianças separadamente, pode ser que ele não identifique essa camada de sexualidade da imagem.
-
 Portanto, conclui-se que a integração entre diferentes redes pode se tornar altamente complexa, 
 ainda mais lidando com identificação de sutilezas implícitas.
 
@@ -90,7 +88,7 @@ foi concluído que modelos multimodais, como Gemini da Google ou GPT da OpenAI s
 
 Modelos chamados ``multimodais'' se referem aos que podem receber como entrada diferentes tipos de arquivos, 
 como vídeos, imagem, áudio e texto. 
-Aqui refere-se especificamente aos multimodais \textit{large language models} (LLM),
+Aqui refere-se especificamente aos multimodais \textit{Large Language Models} (LLM),
 que são treinados por aprendizado de máquina auto-supervisionado em uma vasta quantidade de dados 
 e capazes de entender e responder em linguagem natural. 
 
@@ -128,6 +126,7 @@ No estudo citado, foi concluído que modelos multimodais podem performar até me
 O artigo também destaca a possibilidade de maior explicabilidade via dos multimodais, que indicam de maneira mais intuitiva como as decisões foram feitas.
 A \autoref{fig:than_explicabilidade_texto} mostra um exemplo dessa explicação em texto, 
 já na \autoref{fig:than_explicabilidade_imagem} foi solicitado ao modelo gerar um mapa de calor destacando onde o tumor foi detectado.
+Enfim, como foi demonstrado, é totalmente possível utilizar modelos multimodais e consiliar uma boa acurácia com a conveniência de se comunicar com a ferramenta utilizando linguagem natural. 
 
 \begin{figure}[htb]
     \centering
@@ -148,8 +147,6 @@ já na \autoref{fig:than_explicabilidade_imagem} foi solicitado ao modelo gerar 
     \end{subfigure} 
     \fonte{\cite{than2024}}
 \end{figure}
-
-Enfim, como foi demonstrado, é totalmente possível utilizar modelos multimodais e consiliar uma boa acurácia com a conveniência de se comunicar com a ferramenta utilizando linguagem natural. 
 
 \section{Comparação de APIs multimodais gratuitas disponíveis}
 
@@ -253,5 +250,4 @@ No caso da Mistral, seus limites são bem mais do que o suficiente para a aplica
 mas a sua performance não é tão boa, logo não foi escolhida.
 Cerebras foi descartada rapidamente por não dar acesso por API ao envio de imagens. 
 Já a Groq, apesar de ter restrições mais severas, dá acesso a dois modelos multimodais e foi considerada para uso.
-
 Portanto, os testes utilizaram os Llama 4 Scout/Maverick disponibilizados pela Groq e o modelo da Google.

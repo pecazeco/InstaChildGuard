@@ -15,7 +15,7 @@ Desde a publicação do vídeo ``adultização'' \cite{felca2025} no YouTube do 
 O vídeo, que aborda a pressão social para que jovens adotem comportamentos considerados ``adultos'' precocemente, gerou uma série de discussões sobre os impactos psicológicos, sociais e educacionais dessa tendência.
 
 No referido vídeo, Felca argumenta que a monetização indiscriminada das redes sociais tem contribuído para a produção de materiais cada vez mais extremos para garantir visibilidade e engajamento, o que levou a uma crescente de conteúdos feitos por adultos envolvendo crianças de maneira imprópria. 
-Como exemplos, no decorrer do vídeo são levantados casos como \textit{podcasts} apresentados por crinças sobre empreendedorismo, pais que abusam dos próprios filhos os forçando a produzir vídeos, e, até mesmo, casos de adultos que produzem conteúdos com alta carga de sexualização sobre crianças.
+Como exemplos, no decorrer do vídeo são levantados casos como podcasts apresentados por crinças sobre empreendedorismo, pais que abusam dos próprios filhos os forçando a produzir vídeos, e, até mesmo, casos de adultos que produzem conteúdos com alta carga de sexualização sobre crianças.
 
 Nesses casos de sexualização, além de atrair a visualização de outras crianças, que ainda não julgam o caráter impróprio do conteúdo, tais vídeos também atraem a atenção de predadores sexuais, o que naturaliza comportamentos potencialmente criminosos.
 O impacto da fala de Felca foi tão grande que, de acordo com a ONG SaferNet, o número de denúncias de pornografia infantil recebidas pela organização cresceu 114\% em uma semana desde a publicação do vídeo \cite{safernet2025}. 
@@ -30,7 +30,7 @@ Para viabilizar essas possíveis novas leis, uma pergunta emerge: a tecnologia c
 O trabalho em questão busca realizar uma prova de conceito, explorando a viabilidade de um sistema automatizado para identificar e sinalizar conteúdos sexualizados envolvendo crianças especificamente no Instagram, 
 exemplificando o quanto a tecnologia pode ser utilizada para dificultar a conexão entre os predadores e tais conteúdos. 
 
-Para atingir os seus objetivos, o projeto visa o desenvolvimento de uma extensão para navegadores \textit{web} baseados em \textit{Chromium} feita em \textit{JavaScript} utilizando \textit{Manifest V3}. 
+Para atingir os seus objetivos, o projeto visa o desenvolvimento de uma extensão para navegadores \textit{web} baseados em Chromium feita em JavaScript utilizando Manifest V3. 
 Essas ferramentas foram escolhidas por serem amplamente utilizadas no desenvolvimento de extensões para navegadores.  
 A extensão se comunica no seu \textit{backend} com a API REST de modelos \textit{Large Language Models} (LLMs) para realizar a análise do conteúdo textual das postagens no Instagram.  
 
@@ -56,6 +56,7 @@ Sobre a segurança, destaca-se a privacidade dos dados dos usuários, já que, a
 
 A implementação do produto final não foi pensada em ser concluída pois essa extensão não foi considerada como tendo um público potencial bem definido: 
 o algoritmo de usuários comuns que não buscam acessar conteúdos sexualizados naturalmente não exibe tais postagens, já usuários potencialmente interessados em acessar esses conteúdos não fariam uso de uma ferramenta que os bloqueia.
+Assim, o objetivo não é que o produto seja utilizado por usuários finais, mas sim que sirva como prova de que as \textit{Big Techs} podem adotar medidas análogas as desse projeto para dificultar a conexão entre predadores sexuais e conteúdos sexualizados envolvendo crianças.
 
 Visto isso, a extensão desenvolvida não será disponibilizada nas lojas oficiais de extensões dos navegadores, se tratando de um protótipo.
 Porém, o código-fonte JavaScript, o código Python utilizado para testes e os demais arquivos utilizados nessa tese estão disponíveis em um repositório público no GitHub\nocite{repositorio}\footnote{Repositório GitHub do projeto: \url{https://github.com/pecazeco/InstaChildGuard}}.
@@ -63,8 +64,6 @@ Porém, o código-fonte JavaScript, o código Python utilizado para testes e os 
 \section{Organização do texto} \label{sec:organizacao_do_texto}
 O restante desta monografia está estruturado em quatro capítulos principais. 
 O \autoref{chap:revisao_bibliografica} apresenta a fundamentação teórica, discutindo o fenômeno da ``adultização'', revisando modelos de detecção existentes e justificando a escolha por agentes multimodais através de uma comparação técnica entre as APIs disponíveis.
-
 O \autoref{chap:desenvolvimento} descreve o desenvolvimento da solução, detalhando a arquitetura da extensão via Manifest V3, a integração com as APIs de LLM e a metodologia criada para os testes sistematizados. 
 Na sequência, o \autoref{chap:testes_resultados} expõe os resultados obtidos, analisando a performance dos diferentes prompts, o impacto da temperatura e a velocidade de resposta dos modelos.
-
 Por fim, o \autoref{chap:conclusao} apresenta as conclusões sobre a viabilidade da prova de conceito e discute possíveis melhorias para uma implementação prática em larga escala.

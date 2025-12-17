@@ -4,8 +4,7 @@
 \section{Conclusões da prova de conceito}
 Por fim, utilizando o Llama 4 Scout foi possível atingir 95\% de acurácia em tempo médio de menos de 1{,}5 segundos por imagem.
 Conclui-se, portanto, que é possível implementar um modelo multimodal para identificar postagens que potencialmente sexualizam crianças de maneira bastante ágil e com boa acurácia. 
-
-A implementação de um frontend para a extensão para o Instagram também provou que é possível integrar esse modelo de maneira fluida com uma página dinâmica, que sofre mutações o tempo todo.
+A implementação de um \textit{frontend} para a extensão para o Instagram também provou que é possível integrar esse modelo de maneira fluida com uma página dinâmica, que sofre mutações o tempo todo.
 
 Além disso, mesmo com os \textit{guard rails} (políticas que guiam e restringem o comportamento de modelos de IA para assegurar que suas saídas sejam seguras, éticas e confiáveis) intrínsicos ao modelo, foi possível contornar os possíveis erros. Isso se deu construindo prompts com jargão técnico, flexibilizando as configurações de segurança do agente e considerando específicos tipos de erro como uma resposta ``sim''.
 
@@ -17,7 +16,7 @@ Algumas evoluções que poderiam ser feitas por parte do Instagram em uma possí
 \begin{itemize}
     \item Além de analisar a potencialidade de sexualização da postagem, também analisar a potencialidade de pedofilia do usuário que está vendo a imagem com base no seu algoritmo. A ideia é afastar conteúdos sugestivos de pessoas que enxergam teor sexual e os mostrar para pessoas que não veem esse teor.
     \item Ao invés de analisar a imagem em tempo real enquanto o usuário acessa, passar a analisar a imagem uma única vez quando ela for postada, economizando recursos de processamento.
-    \item Na prática, se o conteúdo for classificado como inadequado a ser mostrado para uma determinada pessoa, essa postagem não deveria nem aparecer, o que elimina o sentido de ter um frontend como feito nesse projeto.
+    \item Na prática, se o conteúdo for classificado como inadequado a ser mostrado para uma determinada pessoa, essa postagem não deveria nem aparecer, o que elimina o sentido de ter um \textit{frontend} como feito nesse projeto.
     \item Além de analisar imagens, obviamente o modelo treinado deve ser capaz também para analisar vídeos (stories e reels).
 \end{itemize} 
 
